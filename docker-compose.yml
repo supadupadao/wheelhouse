@@ -1,0 +1,57 @@
+name: "skipper"
+
+services:
+  db:
+    image: postgres:16
+    container_name: postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      PGDATA: /data/postgres
+      POSTGRES_DB: ${SKIPPER_DB:-skipper}
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${SKIPPER_DB:-skipper}" ]
+      interval: 30s
+      timeout: 60s
+      retries: 5
+      start_period: 80s
+    volumes:
+      - postgres:/data/postgres
+    networks:
+      - skipper
+    restart: unless-stopped
+
+  migration:
+    image: rust:1.83
+    volumes:
+      - ./migration:/app
+    working_dir: /app
+    command:
+      - cargo
+      - run
+      - --
+      - up
+    environment:
+      DATABASE_URL: "postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@db:5432/${SKIPPER_DB:-skipper}"
+    restart: on-failure
+    networks:
+      - skipper
+    depends_on:
+      db:
+        condition: service_healthy
+        restart: true
+  
+  indexer:
+    build:
+      context: indexer
+    depends_on:
+      migration:
+        condition: service_completed_successfully
+
+networks:
+  skipper:
+    name: skipper-network
+    driver: bridge
+
+volumes:
+  postgres:
