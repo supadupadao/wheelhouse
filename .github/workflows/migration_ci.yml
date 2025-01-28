@@ -1,0 +1,20 @@
+name: Indexer Continuous Integration
+
+on:
+  pull_request:
+    branches: [ 'master' ]
+    paths:
+      - "migration/**"
+  merge_group:
+    types: [ checks_requested ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./migration
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Rust project
+        run: cargo build

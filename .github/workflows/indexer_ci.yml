@@ -1,0 +1,44 @@
+name: Indexer Continuous Integration
+
+on:
+  pull_request:
+    branches: [ 'master' ]
+    paths:
+      - "indexer/**"
+  merge_group:
+    types: [ checks_requested ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./indexer
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Rust project
+        run: cargo build
+
+  test:
+    needs: build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./indexer
+    steps:
+      - uses: actions/checkout@v4'
+      - name: Run tests
+        run: cargo test
+
+  lint:
+    needs: build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./indexer
+    steps:
+      - uses: actions/checkout@v4'
+      - name: Install Clippy
+        run: rustup component add clippy
+      - name: Linter
+        run: cargo clippy
