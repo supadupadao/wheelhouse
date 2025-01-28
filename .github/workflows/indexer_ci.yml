@@ -26,7 +26,7 @@ jobs:
       run:
         working-directory: ./indexer
     steps:
-      - uses: actions/checkout@v4'
+      - uses: actions/checkout@v4
       - name: Run tests
         run: cargo test
 
@@ -37,7 +37,7 @@ jobs:
       run:
         working-directory: ./indexer
     steps:
-      - uses: actions/checkout@v4'
+      - uses: actions/checkout@v4
       - name: Install Clippy
         run: rustup component add clippy
       - name: Linter
