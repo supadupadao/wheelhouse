@@ -1,4 +1,5 @@
-use crate::listener::Listener;
+use crate::account::AccountTracesListener;
+use crate::conf::conf;
 use std::sync::Arc;
 use std::time::Duration;
 use tokio_utils::RateLimiter;
@@ -11,7 +12,9 @@ use tracing_subscriber::{fmt, EnvFilter};
 #[macro_use]
 extern crate tracing;
 
-mod listener;
+mod account;
+mod conf;
+mod traces;
 
 #[inline(always)]
 fn prepare_logs() {
@@ -22,16 +25,25 @@ fn prepare_logs() {
 }
 
 async fn run() {
+    let c = conf();
+
     let tonapi_client = RestApiClientV2::new(Network::Testnet, None);
     let rl = Arc::new(RateLimiter::new(Duration::from_secs(1)));
-    let mut l = Listener::new(
-        TonAddress::from_base64_std("0QCMsvusl1rl4rZemB3wtZgcqEB4vLftEFmWsAmEvDErsb00").unwrap(),
-    );
+    let mut l =
+        AccountTracesListener::new(TonAddress::from_base64_std(c.dao_address.as_str()).unwrap());
 
+    let mut last_trace = None;
     loop {
-        let result = l.get_traces(rl.clone(), &tonapi_client).await.unwrap();
+        let mut result = l.get_traces(rl.clone(), &tonapi_client).await.unwrap();
 
-        println!("{:?}", result);
+        while let Some(trace) = result.pop() {
+            trace.handle(rl.clone(), &tonapi_client).await.unwrap();
+            last_trace = Some(trace.get_trace_id());
+        }
+
+        if let Some(ref t) = last_trace {
+            l.set_last_trace_id(t.clone());
+        }
     }
 }
 
