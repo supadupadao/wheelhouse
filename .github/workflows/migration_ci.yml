@@ -1,4 +1,4 @@
-name: Indexer Continuous Integration
+name: Migration Continuous Integration
 
 on:
   pull_request:
