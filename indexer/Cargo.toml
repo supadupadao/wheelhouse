@@ -1,0 +1,16 @@
+[package]
+name = "indexer"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = { version = "1.0.95" }
+clap = { version = "4.5.27", features = ["derive", "env"] }
+lazy_static = { version = "1.5.0" }
+sea-orm = { version = "1.1.0", features = ["sqlx-postgres", "runtime-tokio-native-tls", "macros"] }
+tokio = { version = "1.43.0", features = ["rt"] }
+tokio-utils = { version = "0.1.2" }
+tonapi = { git = "https://github.com/liketurbo/tonapi-rs" }
+tonlib-core = { version = "0.23.1" }
+tracing = { version = "0.1.41" }
+tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
