@@ -1,6 +1,14 @@
+use crate::parser::start_parsing;
 use std::sync::Arc;
 use tokio_utils::RateLimiter;
 use tonapi::RestApiClientV2;
+use tonlib_core::TonAddress;
+
+pub enum UpdateType {
+    // TODO IMPLEMENT HASH FOR HASHSET! TO AVOID DUPLICATED OPERATIONS
+    NewProposal { proposal_id: u64 },
+    ProposalVote { proposal_id: u64 },
+}
 
 pub struct TraceHandler {
     trace_id: String,
@@ -17,6 +25,7 @@ impl TraceHandler {
 
     pub async fn handle(
         &self,
+        skipper_address: TonAddress,
         rate_limiter: Arc<RateLimiter>,
         ton_client: &RestApiClientV2,
     ) -> anyhow::Result<()> {
@@ -25,7 +34,7 @@ impl TraceHandler {
             .await
             .map_err(|err| anyhow::Error::msg(err.to_string()))?;
 
-        info!("Parsing transaction {:?}", trace_info);
+        let _acc = start_parsing(skipper_address, trace_info)?;
 
         Ok(())
     }
