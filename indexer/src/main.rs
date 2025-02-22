@@ -15,6 +15,8 @@ extern crate tracing;
 
 mod account;
 mod conf;
+mod consts;
+mod messages;
 mod parser;
 mod traces;
 
@@ -40,10 +42,17 @@ async fn run() {
         let mut result = l.get_traces(rl.clone(), &tonapi_client).await.unwrap();
 
         while let Some(trace) = result.pop() {
-            trace
+            let result = trace
                 .handle(skipper_address.clone(), rl.clone(), &tonapi_client)
-                .await
-                .unwrap();
+                .await;
+            match result {
+                Ok(_) => {
+                    info!("Successfuly parsed trace")
+                }
+                Err(_) => {
+                    error!("Failed to parse the trace")
+                }
+            }
             last_trace = Some(trace.get_trace_id());
         }
 
