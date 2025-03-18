@@ -4,6 +4,8 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+entities = { path = "../entities" }
+
 anyhow = { version = "1.0.95" }
 clap = { version = "4.5.27", features = ["derive", "env"] }
 lazy_static = { version = "1.5.0" }
@@ -14,4 +16,5 @@ tonapi = { version = "0.3.2" }
 tonlib-core = { version = "0.23.1" }
 tracing = { version = "0.1.41" }
 tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
-tonstruct = { version = "0.0.2" }
+tonstruct = { version = "0.0.3" }
+serde = { version = "1.0.217", features = ["derive"] }

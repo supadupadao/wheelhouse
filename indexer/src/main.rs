@@ -42,6 +42,7 @@ async fn run() {
         let mut result = l.get_traces(rl.clone(), &tonapi_client).await.unwrap();
 
         while let Some(trace) = result.pop() {
+            info!("Started parsing trace {:?}", trace.get_trace_id());
             let result = trace
                 .handle(skipper_address.clone(), rl.clone(), &tonapi_client)
                 .await;
@@ -70,6 +71,4 @@ fn main() {
         .build()
         .unwrap()
         .block_on(run());
-
-    info!("Hello");
 }
