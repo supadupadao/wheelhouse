@@ -1,5 +1,5 @@
 use crate::consts;
-use crate::messages::SkipperMessages;
+use crate::messages::{InitProposal, ProxyPayload, SkipperMessages, VoteForProposal};
 use clap::Parser;
 use tonapi::models::Trace;
 use tonlib_core::cell::{BagOfCells, Cell, CellParser};
@@ -32,8 +32,8 @@ fn childs_traversal(
     for child in childs.unwrap_or_default() {
         match f(accumulator.clone(), child) {
             Ok(acc) => return Ok(acc),
-            Err(_) => {
-                info!("Reached leaf trace");
+            Err(err) => {
+                debug!("Reached leaf trace: {}", err);
             }
         };
     }
@@ -46,21 +46,83 @@ fn match_root(mut accumulator: Accumulator, trace: Trace) -> anyhow::Result<Accu
 
     if current_address == accumulator.skipper_address {
         if let Some(in_msg) = trace.transaction.in_msg {
-            let op_code = in_msg.op_code.unwrap_or_default();
             let body = in_msg.raw_body.unwrap_or_default();
-
-            info!("OP_CODE: {}", op_code);
 
             let mut boc = BagOfCells::parse_hex(&body)?;
             let cell = boc.into_single_root()?.build()?;
 
-            let p = SkipperMessages::from_cell(Cell::from(cell))?;
-
-            info!("PARSED {:?}", p)
+            if let Ok(SkipperMessages::ProxyMessage(skipper_root_message)) =
+                SkipperMessages::from_cell(cell)
+            {
+                return match skipper_root_message.payload.inner() {
+                    ProxyPayload::RequestNewProposal(_) => {
+                        childs_traversal(match_request_new_proposal, accumulator, trace.children)
+                    }
+                    ProxyPayload::VoteForProposal(_) => {
+                        childs_traversal(match_vote_for_proposal, accumulator, trace.children)
+                    }
+                };
+            }
         }
 
         return Ok(accumulator);
     }
 
     childs_traversal(match_root, accumulator, trace.children)
+}
+
+fn match_request_new_proposal(
+    mut accumulator: Accumulator,
+    trace: Trace,
+) -> anyhow::Result<Accumulator> {
+    if let Some(in_msg) = trace.transaction.in_msg {
+        let body = in_msg.raw_body.unwrap_or_default();
+
+        let mut boc = BagOfCells::parse_hex(&body)?;
+        let cell = boc.into_single_root()?.build()?;
+
+        if let Ok(init_proposal) = InitProposal::from_cell(cell) {
+            info!("New proposal: {:?}", init_proposal);
+            // accumulator.proposal_address = Some(TonAddress::from_base64_std(
+            //     &trace.transaction.account.address,
+            // )?);
+            return childs_traversal(match_success, accumulator, trace.children);
+        }
+    }
+
+    childs_traversal(match_request_new_proposal, accumulator, trace.children)
+}
+
+fn match_vote_for_proposal(
+    mut accumulator: Accumulator,
+    trace: Trace,
+) -> anyhow::Result<Accumulator> {
+    if let Some(in_msg) = trace.transaction.in_msg {
+        let body = in_msg.raw_body.unwrap_or_default();
+
+        let mut boc = BagOfCells::parse_hex(&body)?;
+        let cell = boc.into_single_root()?.build()?;
+
+        if let Ok(vote_for_proposal) = VoteForProposal::from_cell(cell) {
+            info!("Vote for proposal: {:?}", vote_for_proposal);
+            // accumulator.proposal_address = Some(TonAddress::from_base64_std(
+            //     &trace.transaction.account.address,
+            // )?);
+            return childs_traversal(match_success, accumulator, trace.children);
+        }
+    }
+
+    childs_traversal(match_vote_for_proposal, accumulator, trace.children)
+}
+
+fn match_success(mut accumulator: Accumulator, trace: Trace) -> anyhow::Result<Accumulator> {
+    if !trace.transaction.success {
+        return Err(anyhow::anyhow!("Found failed transaction"));
+    }
+
+    if trace.children.is_some() {
+        return childs_traversal(match_success, accumulator, trace.children);
+    }
+
+    Ok(accumulator)
 }

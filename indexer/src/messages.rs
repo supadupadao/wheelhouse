@@ -74,3 +74,11 @@ impl FromCell for SkipperMessages {
         }
     }
 }
+
+#[derive(FromCell, Debug)]
+pub struct InitProposal {
+    pub initiator: Address,
+    pub amount: Coins,
+    pub data: ProposalData,
+    pub lock_period: Uint<64>,
+}
