@@ -1,4 +1,5 @@
 use crate::parser::start_parsing;
+use sea_orm::DatabaseConnection;
 use std::sync::Arc;
 use tokio_utils::RateLimiter;
 use tonapi::RestApiClientV2;
@@ -28,13 +29,14 @@ impl TraceHandler {
         skipper_address: TonAddress,
         rate_limiter: Arc<RateLimiter>,
         ton_client: &RestApiClientV2,
+        db: &DatabaseConnection,
     ) -> anyhow::Result<()> {
         let trace_info = rate_limiter
             .throttle(|| ton_client.get_trace(self.trace_id.as_str()))
             .await
             .map_err(|err| anyhow::Error::msg(err.to_string()))?;
 
-        let _acc = start_parsing(skipper_address, trace_info)?;
+        let _acc = start_parsing(skipper_address, trace_info, db)?;
 
         Ok(())
     }

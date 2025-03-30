@@ -1,4 +1,4 @@
-use crate::consts::TON_ADDRESS_BYTES_LEN;
+use crate::consts::{TON_ADDRESS_BYTES_LEN, TON_TRACE_ID_LEN};
 use sea_orm_migration::{prelude::*, schema::*};
 
 #[derive(DeriveMigrationName)]
@@ -23,6 +23,7 @@ impl MigrationTrait for Migration {
                             .unique_key()
                             .not_null(),
                     )
+                    .col(ColumnDef::new(DAO::TraceId).string_len(TON_TRACE_ID_LEN))
                     .to_owned(),
             )
             .await
@@ -40,4 +41,5 @@ pub(crate) enum DAO {
     Table,
     Address,
     JettonAddress,
+    TraceId,
 }

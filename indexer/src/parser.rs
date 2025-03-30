@@ -1,8 +1,7 @@
-use crate::consts;
 use crate::messages::{InitProposal, ProxyPayload, SkipperMessages, VoteForProposal};
-use clap::Parser;
+use sea_orm::DatabaseConnection;
 use tonapi::models::Trace;
-use tonlib_core::cell::{BagOfCells, Cell, CellParser};
+use tonlib_core::cell::BagOfCells;
 use tonlib_core::message::TonMessage;
 use tonlib_core::TonAddress;
 use tonstruct::fields::{Address, CellRef, Coins, Int, Uint};
@@ -19,18 +18,23 @@ impl Accumulator {
     }
 }
 
-pub fn start_parsing(skipper_address: TonAddress, trace: Trace) -> anyhow::Result<Accumulator> {
+pub fn start_parsing(
+    skipper_address: TonAddress,
+    trace: Trace,
+    db: &DatabaseConnection,
+) -> anyhow::Result<Accumulator> {
     let accumulator = Accumulator::new(skipper_address);
-    match_root(accumulator, trace)
+    match_root(accumulator, trace, db)
 }
 
 fn childs_traversal(
-    f: fn(Accumulator, Trace) -> anyhow::Result<Accumulator>,
+    f: fn(Accumulator, Trace, &DatabaseConnection) -> anyhow::Result<Accumulator>,
     accumulator: Accumulator,
     childs: Option<Vec<Trace>>,
+    db: &DatabaseConnection,
 ) -> anyhow::Result<Accumulator> {
     for child in childs.unwrap_or_default() {
-        match f(accumulator.clone(), child) {
+        match f(accumulator.clone(), child, db) {
             Ok(acc) => return Ok(acc),
             Err(err) => {
                 debug!("Reached leaf trace: {}", err);
@@ -41,7 +45,11 @@ fn childs_traversal(
     Err(anyhow::anyhow!("No successful parses in current branch"))
 }
 
-fn match_root(mut accumulator: Accumulator, trace: Trace) -> anyhow::Result<Accumulator> {
+fn match_root(
+    mut accumulator: Accumulator,
+    trace: Trace,
+    db: &DatabaseConnection,
+) -> anyhow::Result<Accumulator> {
     let current_address = TonAddress::from_hex_str(&trace.transaction.account.address)?;
 
     if current_address == accumulator.skipper_address {
@@ -55,11 +63,14 @@ fn match_root(mut accumulator: Accumulator, trace: Trace) -> anyhow::Result<Accu
                 SkipperMessages::from_cell(cell)
             {
                 return match skipper_root_message.payload.inner() {
-                    ProxyPayload::RequestNewProposal(_) => {
-                        childs_traversal(match_request_new_proposal, accumulator, trace.children)
-                    }
+                    ProxyPayload::RequestNewProposal(_) => childs_traversal(
+                        match_request_new_proposal,
+                        accumulator,
+                        trace.children,
+                        db,
+                    ),
                     ProxyPayload::VoteForProposal(_) => {
-                        childs_traversal(match_vote_for_proposal, accumulator, trace.children)
+                        childs_traversal(match_vote_for_proposal, accumulator, trace.children, db)
                     }
                 };
             }
@@ -68,12 +79,13 @@ fn match_root(mut accumulator: Accumulator, trace: Trace) -> anyhow::Result<Accu
         return Ok(accumulator);
     }
 
-    childs_traversal(match_root, accumulator, trace.children)
+    childs_traversal(match_root, accumulator, trace.children, db)
 }
 
 fn match_request_new_proposal(
     mut accumulator: Accumulator,
     trace: Trace,
+    db: &DatabaseConnection,
 ) -> anyhow::Result<Accumulator> {
     if let Some(in_msg) = trace.transaction.in_msg {
         let body = in_msg.raw_body.unwrap_or_default();
@@ -86,16 +98,17 @@ fn match_request_new_proposal(
             // accumulator.proposal_address = Some(TonAddress::from_base64_std(
             //     &trace.transaction.account.address,
             // )?);
-            return childs_traversal(match_success, accumulator, trace.children);
+            return childs_traversal(match_success, accumulator, trace.children, db);
         }
     }
 
-    childs_traversal(match_request_new_proposal, accumulator, trace.children)
+    childs_traversal(match_request_new_proposal, accumulator, trace.children, db)
 }
 
 fn match_vote_for_proposal(
     mut accumulator: Accumulator,
     trace: Trace,
+    db: &DatabaseConnection,
 ) -> anyhow::Result<Accumulator> {
     if let Some(in_msg) = trace.transaction.in_msg {
         let body = in_msg.raw_body.unwrap_or_default();
@@ -108,20 +121,24 @@ fn match_vote_for_proposal(
             // accumulator.proposal_address = Some(TonAddress::from_base64_std(
             //     &trace.transaction.account.address,
             // )?);
-            return childs_traversal(match_success, accumulator, trace.children);
+            return childs_traversal(match_success, accumulator, trace.children, db);
         }
     }
 
-    childs_traversal(match_vote_for_proposal, accumulator, trace.children)
+    childs_traversal(match_vote_for_proposal, accumulator, trace.children, db)
 }
 
-fn match_success(mut accumulator: Accumulator, trace: Trace) -> anyhow::Result<Accumulator> {
+fn match_success(
+    accumulator: Accumulator,
+    trace: Trace,
+    db: &DatabaseConnection,
+) -> anyhow::Result<Accumulator> {
     if !trace.transaction.success {
         return Err(anyhow::anyhow!("Found failed transaction"));
     }
 
     if trace.children.is_some() {
-        return childs_traversal(match_success, accumulator, trace.children);
+        return childs_traversal(match_success, accumulator, trace.children, db);
     }
 
     Ok(accumulator)

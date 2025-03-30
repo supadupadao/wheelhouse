@@ -2,6 +2,5 @@
 
 pub mod prelude;
 
-pub mod account_last_trace;
 pub mod dao;
 pub mod proposal;

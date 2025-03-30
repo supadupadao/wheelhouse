@@ -13,6 +13,7 @@ pub struct Model {
     pub address: Vec<u8>,
     #[sea_orm(column_type = "VarBinary(StringLen::None)", unique)]
     pub jetton_address: Vec<u8>,
+    pub trace_id: Option<String>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

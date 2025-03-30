@@ -1,6 +1,7 @@
 use crate::account::AccountTracesListener;
 use crate::conf::conf;
-use crate::parser::start_parsing;
+use sea_orm::sea_query::Expr;
+use sea_orm::{ColumnTrait, Database, EntityTrait, QueryFilter};
 use std::sync::Arc;
 use std::time::Duration;
 use tokio_utils::RateLimiter;
@@ -28,8 +29,35 @@ fn prepare_logs() {
         .init();
 }
 
-async fn run() {
+async fn run() -> anyhow::Result<()> {
     let c = conf();
+
+    let db = Database::connect(&c.db).await?;
+
+    let dao_address = c.dao_address.as_str();
+
+    let dao_db = {
+        let db_result = entities::dao::Entity::find()
+            .filter(entities::dao::Column::Address.contains(dao_address))
+            .one(&db)
+            .await?;
+        match db_result {
+            None => {
+                let model = entities::dao::Model {
+                    address: vec![],
+                    jetton_address: vec![],
+                    trace_id: None,
+                };
+                let result = entities::dao::Entity::insert::<entities::dao::ActiveModel>(
+                    model.clone().into(),
+                )
+                .exec(&db)
+                .await?;
+                model
+            }
+            Some(dao) => dao,
+        }
+    };
 
     let skipper_address = TonAddress::from_base64_url(c.dao_address.as_str()).unwrap();
 
@@ -37,14 +65,14 @@ async fn run() {
     let rl = Arc::new(RateLimiter::new(Duration::from_secs(1)));
     let mut l = AccountTracesListener::new(skipper_address.clone());
 
-    let mut last_trace = None;
+    let mut last_trace = dao_db.trace_id;
     loop {
         let mut result = l.get_traces(rl.clone(), &tonapi_client).await.unwrap();
 
         while let Some(trace) = result.pop() {
             info!("Started parsing trace {:?}", trace.get_trace_id());
             let result = trace
-                .handle(skipper_address.clone(), rl.clone(), &tonapi_client)
+                .handle(skipper_address.clone(), rl.clone(), &tonapi_client, &db)
                 .await;
             match result {
                 Ok(_) => {
@@ -58,6 +86,12 @@ async fn run() {
         }
 
         if let Some(ref t) = last_trace {
+            entities::dao::Entity::update_many()
+                .col_expr(entities::dao::Column::TraceId, Expr::value(t))
+                .filter(entities::dao::Column::Address.eq(dao_address))
+                .exec(&db)
+                .await?;
+
             l.set_last_trace_id(t.clone());
         }
     }
@@ -70,5 +104,6 @@ fn main() {
         .enable_all()
         .build()
         .unwrap()
-        .block_on(run());
+        .block_on(run())
+        .unwrap();
 }
