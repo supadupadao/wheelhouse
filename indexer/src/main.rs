@@ -34,17 +34,17 @@ async fn run() -> anyhow::Result<()> {
 
     let db = Database::connect(&c.db).await?;
 
-    let dao_address = c.dao_address.as_str();
+    let skipper_address = TonAddress::from_base64_url(c.dao_address.as_str()).unwrap();
 
     let dao_db = {
         let db_result = entities::dao::Entity::find()
-            .filter(entities::dao::Column::Address.contains(dao_address))
+            .filter(entities::dao::Column::Address.eq(skipper_address.hash_part.to_vec()))
             .one(&db)
             .await?;
         match db_result {
             None => {
                 let model = entities::dao::Model {
-                    address: vec![],
+                    address: skipper_address.hash_part.to_vec(),
                     jetton_address: vec![],
                     trace_id: None,
                 };
@@ -59,8 +59,6 @@ async fn run() -> anyhow::Result<()> {
         }
     };
 
-    let skipper_address = TonAddress::from_base64_url(c.dao_address.as_str()).unwrap();
-
     let tonapi_client = RestApiClientV2::new(Network::Testnet, None);
     let rl = Arc::new(RateLimiter::new(Duration::from_secs(1)));
     let mut l = AccountTracesListener::new(skipper_address.clone());
@@ -68,6 +66,11 @@ async fn run() -> anyhow::Result<()> {
     let mut last_trace = dao_db.trace_id;
     loop {
         let mut result = l.get_traces(rl.clone(), &tonapi_client).await.unwrap();
+
+        if result.is_empty() {
+            debug!("No traces");
+            continue;
+        }
 
         while let Some(trace) = result.pop() {
             info!("Started parsing trace {:?}", trace.get_trace_id());
@@ -88,7 +91,7 @@ async fn run() -> anyhow::Result<()> {
         if let Some(ref t) = last_trace {
             entities::dao::Entity::update_many()
                 .col_expr(entities::dao::Column::TraceId, Expr::value(t))
-                .filter(entities::dao::Column::Address.eq(dao_address))
+                .filter(entities::dao::Column::Address.eq(skipper_address.hash_part.to_vec()))
                 .exec(&db)
                 .await?;
 

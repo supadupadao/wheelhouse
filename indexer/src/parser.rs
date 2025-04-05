@@ -8,13 +8,23 @@ use tonstruct::fields::{Address, CellRef, Coins, Int, Uint};
 use tonstruct::FromCell;
 
 #[derive(Clone)]
+pub enum Ops {
+    NewProposal {},
+    VoteForProposal {},
+}
+
+#[derive(Clone)]
 pub struct Accumulator {
-    skipper_address: TonAddress,
+    pub skipper_address: TonAddress,
+    pub op: Option<Ops>,
 }
 
 impl Accumulator {
     pub fn new(skipper_address: TonAddress) -> Accumulator {
-        Accumulator { skipper_address }
+        Accumulator {
+            skipper_address,
+            op: None,
+        }
     }
 }
 
@@ -63,13 +73,17 @@ fn match_root(
                 SkipperMessages::from_cell(cell)
             {
                 return match skipper_root_message.payload.inner() {
-                    ProxyPayload::RequestNewProposal(_) => childs_traversal(
-                        match_request_new_proposal,
-                        accumulator,
-                        trace.children,
-                        db,
-                    ),
+                    ProxyPayload::RequestNewProposal(_) => {
+                        accumulator.op = Some(Ops::NewProposal {});
+                        childs_traversal(
+                            match_request_new_proposal,
+                            accumulator,
+                            trace.children,
+                            db,
+                        )
+                    }
                     ProxyPayload::VoteForProposal(_) => {
+                        accumulator.op = Some(Ops::VoteForProposal {});
                         childs_traversal(match_vote_for_proposal, accumulator, trace.children, db)
                     }
                 };

@@ -1,15 +1,9 @@
-use crate::parser::start_parsing;
+use crate::parser::{start_parsing, Ops};
 use sea_orm::DatabaseConnection;
 use std::sync::Arc;
 use tokio_utils::RateLimiter;
 use tonapi::RestApiClientV2;
 use tonlib_core::TonAddress;
-
-pub enum UpdateType {
-    // TODO IMPLEMENT HASH FOR HASHSET! TO AVOID DUPLICATED OPERATIONS
-    NewProposal { proposal_id: u64 },
-    ProposalVote { proposal_id: u64 },
-}
 
 pub struct TraceHandler {
     trace_id: String,
@@ -36,7 +30,20 @@ impl TraceHandler {
             .await
             .map_err(|err| anyhow::Error::msg(err.to_string()))?;
 
-        let _acc = start_parsing(skipper_address, trace_info, db)?;
+        let acc = start_parsing(skipper_address, trace_info, db)?;
+
+        match acc.op {
+            Some(Ops::NewProposal {}) => {
+                // TODO
+                info!("New proposal created");
+            }
+            Some(Ops::VoteForProposal {}) => {
+                // TODO
+                info!("Vote proposal created");
+            }
+
+            None => {}
+        }
 
         Ok(())
     }
