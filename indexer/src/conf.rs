@@ -10,6 +10,9 @@ pub struct Config {
         help = "Address of deployed Skipper contract"
     )]
     pub dao_address: String,
+
+    #[clap(long = "database", env = "SKIPPER_DB_URL", help = "Database url")]
+    pub db: String,
 }
 
 pub fn conf() -> &'static Config {
