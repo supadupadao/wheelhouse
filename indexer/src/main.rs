@@ -81,8 +81,8 @@ async fn run() -> anyhow::Result<()> {
                 Ok(_) => {
                     info!("Successfuly parsed trace")
                 }
-                Err(_) => {
-                    error!("Failed to parse the trace")
+                Err(err) => {
+                    error!("Failed to parse the trace: {:?}", err);
                 }
             }
             last_trace = Some(trace.get_trace_id());

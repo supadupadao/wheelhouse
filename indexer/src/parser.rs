@@ -9,8 +9,8 @@ use tonstruct::FromCell;
 
 #[derive(Clone)]
 pub enum Ops {
-    NewProposal {},
-    VoteForProposal {},
+    NewProposal { proposal_address: TonAddress },
+    VoteForProposal { proposal_id: i64 },
 }
 
 #[derive(Clone)]
@@ -73,17 +73,13 @@ fn match_root(
                 SkipperMessages::from_cell(cell)
             {
                 return match skipper_root_message.payload.inner() {
-                    ProxyPayload::RequestNewProposal(_) => {
-                        accumulator.op = Some(Ops::NewProposal {});
-                        childs_traversal(
-                            match_request_new_proposal,
-                            accumulator,
-                            trace.children,
-                            db,
-                        )
-                    }
+                    ProxyPayload::RequestNewProposal(_) => childs_traversal(
+                        match_request_new_proposal,
+                        accumulator,
+                        trace.children,
+                        db,
+                    ),
                     ProxyPayload::VoteForProposal(_) => {
-                        accumulator.op = Some(Ops::VoteForProposal {});
                         childs_traversal(match_vote_for_proposal, accumulator, trace.children, db)
                     }
                 };
@@ -109,9 +105,10 @@ fn match_request_new_proposal(
 
         if let Ok(init_proposal) = InitProposal::from_cell(cell) {
             info!("New proposal: {:?}", init_proposal);
-            // accumulator.proposal_address = Some(TonAddress::from_base64_std(
-            //     &trace.transaction.account.address,
-            // )?);
+
+            let proposal_address = TonAddress::from_hex_str(&trace.transaction.account.address)?;
+            accumulator.op = Some(Ops::NewProposal { proposal_address });
+
             return childs_traversal(match_success, accumulator, trace.children, db);
         }
     }
@@ -132,9 +129,12 @@ fn match_vote_for_proposal(
 
         if let Ok(vote_for_proposal) = VoteForProposal::from_cell(cell) {
             info!("Vote for proposal: {:?}", vote_for_proposal);
-            // accumulator.proposal_address = Some(TonAddress::from_base64_std(
-            //     &trace.transaction.account.address,
-            // )?);
+
+            // let proposal_address = TonAddress::from_hex_str(&trace.transaction.account.address)?;
+            // accumulator.op = Some(Ops::VoteForProposal {
+            //     proposal_id: proposal_address.hash_part.to_vec(),
+            // });
+
             return childs_traversal(match_success, accumulator, trace.children, db);
         }
     }

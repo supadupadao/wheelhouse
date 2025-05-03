@@ -8,13 +8,24 @@ fn load_opcode(parser: &mut CellParser) -> anyhow::Result<u32> {
 
 #[derive(FromCell, Debug)]
 pub struct ProposalData {
+    proposal_id: Uint<64>,
+    is_initialized: bool,
+    is_executed: bool,
+    votes_yes: Coins,
+    votes_no: Coins,
+    expires_at: Uint<64>,
+    payload: Option<ProposalPayload>,
+}
+
+#[derive(FromCell, Debug)]
+pub struct ProposalPayload {
     pub receiver: Address,
     // body: Cell;
 }
 
 #[derive(FromCell, Debug)]
 pub struct RequestNewProposal {
-    pub data: ProposalData,
+    pub data: ProposalPayload,
 }
 
 #[derive(FromCell, Debug)]
@@ -79,6 +90,6 @@ impl FromCell for SkipperMessages {
 pub struct InitProposal {
     pub initiator: Address,
     pub amount: Coins,
-    pub data: ProposalData,
+    pub data: ProposalPayload,
     pub lock_period: Uint<64>,
 }
