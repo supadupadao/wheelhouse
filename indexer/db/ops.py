@@ -5,9 +5,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session, select
 from tonsdk.utils import Address
 
-from indexer.db import TraceLog
-from indexer.db.models import DAO
-from indexer.db.utils import address_into_db_format
+from libs.db import address_into_db_format, DAO, TraceLog
 
 
 def get_or_create_dao(engine: Engine, dao_address: Address) -> DAO:
