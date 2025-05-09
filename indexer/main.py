@@ -4,7 +4,6 @@ import uvloop
 
 from indexer.common.ctx import Context
 from indexer.config import init_settings
-from indexer.db import init_db
 from indexer.db.ops import get_or_create_dao, get_last_trace
 from indexer.error import BaseIndexerException
 from indexer.logging_config import init_logging
@@ -12,6 +11,7 @@ from indexer.ton import init_tonapi_client
 from indexer.ton.api import list_new_traces, get_trace_info
 from indexer.ton.parser import parse_trace
 from indexer.ton.utils import str_to_address
+from libs.db import init_db
 
 
 async def main(context: Context):
