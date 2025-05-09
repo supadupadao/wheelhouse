@@ -29,4 +29,5 @@ async def list_new_traces(
 
 
 async def get_trace_info(tonapi_client: AsyncTonapi, trace_id: str) -> Trace:
-    return await tonapi_client.traces.get_trace(trace_id)
+    async with limiter:
+        return await tonapi_client.traces.get_trace(trace_id)

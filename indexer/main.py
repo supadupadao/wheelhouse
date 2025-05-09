@@ -19,17 +19,20 @@ async def main(context: Context):
     raw_dao_address = dao_address.to_string(is_user_friendly=False)
 
     tonapi_client = init_tonapi_client(context.cfg.tonapi_token, context.cfg.is_testnet)
-    logging.debug("TONAPI client initialized")
+    logging.info("TONAPI client initialized")
 
     dao_record = get_or_create_dao(context.db, dao_address)
 
     last_indexed_trace = get_last_trace(context.db, dao_record)
-    logging.debug("Last indexed trace %s", last_indexed_trace)
+    logging.info("Last indexed trace %s", last_indexed_trace)
     while True:
         traces = await list_new_traces(tonapi_client, last_indexed_trace, dao_address.to_string())
+        logging.info("Fetched traces: %s", traces)
         for trace_id in traces:
+            logging.info("Processing trace %s", trace_id)
             trace_info = await get_trace_info(tonapi_client, trace_id)
-            parsed_trace = parse_trace(trace_info)
+            logging.info("Trace info: %s", trace_info)
+            parsed_trace = await parse_trace(raw_dao_address, tonapi_client, trace_info)
 
 
 if __name__ == "__main__":
