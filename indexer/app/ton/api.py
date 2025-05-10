@@ -3,7 +3,7 @@ from typing import Optional
 from pytonapi import AsyncTonapi
 from pytonapi.schema.traces import Trace
 
-from indexer.ton import limiter
+from indexer.app.ton import limiter
 
 
 async def list_new_traces(

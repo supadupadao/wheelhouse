@@ -6,7 +6,7 @@ from pytonapi import AsyncTonapi
 from pytonapi.schema.traces import Trace
 from tonsdk.boc import Cell, Slice
 
-from indexer.ton import limiter
+from indexer.app.ton import limiter
 
 
 @dataclass
