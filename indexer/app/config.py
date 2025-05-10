@@ -2,7 +2,7 @@ from typing import Optional
 
 from pydantic_settings import BaseSettings, SettingsConfigDict, SettingsError
 
-from indexer.app.error import IndexerSettingsError
+from libs.error import IndexerSettingsError
 
 
 class Settings(BaseSettings):

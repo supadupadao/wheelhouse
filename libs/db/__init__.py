@@ -2,9 +2,9 @@ from sqlalchemy import Engine
 from sqlalchemy.exc import SQLAlchemyError
 from sqlmodel import create_engine
 
-from indexer.error import IndexerDatabaseError
 from libs.db.models import DAO, Wallet, Proposal, Vote, TraceLog
 from libs.db.utils import address_into_db_format
+from libs.error import IndexerDatabaseError
 
 
 def init_db(db_url: str) -> Engine:
