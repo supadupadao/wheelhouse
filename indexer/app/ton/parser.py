@@ -27,6 +27,7 @@ class ProposalData:
 
 @dataclass
 class NewProposalState(BaseState):
+    address: str
     proposal_data: ProposalData
 
 
@@ -96,6 +97,8 @@ async def handle_new_proposal(state: BaseState, trace: Trace) -> Optional[BaseSt
                 return NewProposalState(
                     skipper_address=state.skipper_address,
                     tonapi_client=state.tonapi_client,
+
+                    address=proposal_contract,
 
                     proposal_data=ProposalData(
                         proposal_id=proposal_id,
