@@ -86,7 +86,7 @@ export default {
         .storeAddress(Address.parse(this.lockAddress || ""))
         .storeAddress(Address.parse(this.lockAddress || ""))
         .storeMaybeRef(null)
-        .storeCoins(1)
+        .storeCoins(toNano("0.01"))
         .endCell()
 
       this.$tonConnectUI.sendTransaction({
