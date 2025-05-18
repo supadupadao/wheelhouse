@@ -3,9 +3,18 @@ import './assets/main.css'
 import { createApp } from 'vue'
 import App from './App.vue'
 import router from './router'
+import { TonConnectUI } from '@tonconnect/ui';
 
-const app = createApp(App)
+const app = createApp(App);
 
-app.use(router)
+(async () => {
+  app.use(router);
 
-app.mount('#app')
+  const tonConnectUI = new TonConnectUI({
+    manifestUrl: `${window.location.origin}/tonconnect-manifest.json`,
+  });
+
+  app.config.globalProperties.$tonConnectUI = tonConnectUI;
+
+  app.mount('#app');
+})();

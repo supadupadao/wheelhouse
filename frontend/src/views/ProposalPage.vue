@@ -1,3 +1,0 @@
-<template>
-  Proposal Page
-</template>
