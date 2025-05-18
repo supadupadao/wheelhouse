@@ -1,4 +1,6 @@
-from sqlalchemy import LargeBinary, BigInteger
+from decimal import Decimal
+
+from sqlalchemy import LargeBinary, BigInteger, Numeric
 from sqlmodel import SQLModel, Field
 
 
@@ -14,6 +16,12 @@ class Proposal(SQLModel, table=True):
     address: bytes = Field(primary_key=True, sa_type=LargeBinary)
     dao: bytes = Field(foreign_key="dao.address", sa_type=LargeBinary)
     id: int = Field()
+    is_initialized: bool = Field()
+    is_executed: bool = Field()
+    votes_yes: Decimal = Field(sa_type=Numeric(39, 0), nullable=False, default=0)
+    votes_no: Decimal = Field(sa_type=Numeric(39, 0), nullable=False, default=0)
+    expires_at: int = Field()
+    # payload
 
 
 class Vote(SQLModel, table=True):

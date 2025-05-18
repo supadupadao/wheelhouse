@@ -11,6 +11,12 @@ router = APIRouter(prefix="/proposals")
 
 class ProposalItem(BaseModel):
     id: int
+    # address: str  # TODO
+    is_initialized: bool
+    is_executed: bool
+    votes_yes: int
+    votes_no: int
+    expires_at: int
 
 
 class ProposalsList(BaseModel):
@@ -24,10 +30,17 @@ async def list_proposals(dao: str) -> ProposalsList:
 
     with Session(engine) as session:
         query = select(Proposal).where(Proposal.dao == bin_address).order_by(Proposal.id)
-        proposals = session.exec(query).all()
+        proposals: list[Proposal] = session.exec(query).all()
 
     return ProposalsList(
         proposals=[
-            ProposalItem(id=proposal.id) for proposal in proposals
+            ProposalItem(
+                id=proposal.id,
+                is_initialized=proposal.is_initialized,
+                is_executed=proposal.is_executed,
+                votes_yes=int(proposal.votes_yes),
+                votes_no=int(proposal.votes_no),
+                expires_at=proposal.expires_at,
+            ) for proposal in proposals
         ]
     )

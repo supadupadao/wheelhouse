@@ -9,7 +9,7 @@ from indexer.app.db.ops import get_or_create_dao, get_last_trace, insert_trace, 
 from indexer.app.logging_config import init_logging
 from indexer.app.ton import init_tonapi_client
 from indexer.app.ton.api import list_new_traces, get_trace_info
-from indexer.app.ton.parser import parse_trace, NewProposalState
+from indexer.app.ton.parser import parse_trace, NewProposalState, VoteProposalState
 from indexer.app.ton.utils import str_to_address
 from libs.db import init_db, TraceLog, Proposal, address_into_db_format
 from libs.error import BaseIndexerException
@@ -40,11 +40,16 @@ async def main(context: Context):
             trace_info = await get_trace_info(tonapi_client, trace_id)
             logging.info("Trace info: %s", trace_info)
             parsed_trace = await parse_trace(raw_dao_address, tonapi_client, trace_info)
-            if isinstance(parsed_trace, NewProposalState):
+            if isinstance(parsed_trace, NewProposalState) or isinstance(parsed_trace, VoteProposalState):
                 insert_proposal(context.db, Proposal(
                     address=address_into_db_format(str_to_address(parsed_trace.address)),
                     dao=dao_record.address,
                     id=parsed_trace.proposal_data.proposal_id,
+                    is_initialized=parsed_trace.proposal_data.is_initialized,
+                    is_executed=parsed_trace.proposal_data.is_executed,
+                    votes_yes=parsed_trace.proposal_data.votes_yes,
+                    votes_no=parsed_trace.proposal_data.votes_no,
+                    expires_at=parsed_trace.proposal_data.expires_at,
                 ))
             insert_trace(context.db, TraceLog(
                 dao=dao_record.address,

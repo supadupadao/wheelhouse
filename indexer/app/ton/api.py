@@ -21,7 +21,7 @@ async def list_new_traces(
         if not len(result.traces):
             break
         for trace in result.traces:
-            if trace.id == last_indexed_trace.hash:
+            if last_indexed_trace and trace.id == last_indexed_trace.hash:
                 return all_traces
             all_traces.append(trace.id)
         before_lt = result.traces[-1].utime

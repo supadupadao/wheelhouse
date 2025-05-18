@@ -7,6 +7,7 @@ from pytonapi.schema.traces import Trace
 from tonsdk.boc import Cell, Slice
 
 from indexer.app.ton import limiter
+from libs.error import TonApiError
 
 
 @dataclass
@@ -33,10 +34,9 @@ class NewProposalState(BaseState):
 
 @dataclass
 class VoteProposalState(BaseState):
-    voter: str
-    proposal_id: int
-    vote: bool
-    amount: int
+    # TODO FIXME: add votes_yes and votes_no fields
+    address: str
+    proposal_data: ProposalData
 
 
 HandlerFunc = Callable[[BaseState, Trace], Awaitable[Optional[BaseState]]]
@@ -79,42 +79,56 @@ async def find_skipper(state: BaseState, trace: Trace) -> Optional[BaseState]:
     return None
 
 
+async def fetch_proposal_state(state: BaseState, proposal_contract: str) -> ProposalData:
+    async with limiter:
+        result = await state.tonapi_client.blockchain.execute_get_method(proposal_contract,
+                                                                         "get_proposal_data")
+    if result.success:
+        proposal_id = int(result.stack[0].num, 16)
+        is_initialized = bool(int(result.stack[1].num, 16))
+        is_executed = bool(int(result.stack[2].num, 16))
+        votes_yes = int(result.stack[3].num, 16)
+        votes_no = int(result.stack[4].num, 16)
+        expires_at = int(result.stack[5].num, 16)
+
+        return ProposalData(
+            proposal_id=proposal_id,
+            is_initialized=is_initialized,
+            is_executed=is_executed,
+            votes_yes=votes_yes,
+            votes_no=votes_no,
+            expires_at=expires_at,
+        )
+    else:
+        raise TonApiError("Error fetching proposal state")
+
+
 async def handle_new_proposal(state: BaseState, trace: Trace) -> Optional[BaseState]:
     opcode = int(trace.transaction.in_msg.op_code, 16)
     if opcode == 0x690201:
         proposal_contract = trace.transaction.account.address.to_raw()
-        async with limiter:
-            result = await state.tonapi_client.blockchain.execute_get_method(proposal_contract,
-                                                                             "get_proposal_data")
-            if result.success:
-                proposal_id = int(result.stack[0].num, 16)
-                is_initialized = bool(int(result.stack[1].num, 16))
-                is_executed = bool(int(result.stack[2].num, 16))
-                votes_yes = int(result.stack[3].num, 16)
-                votes_no = int(result.stack[4].num, 16)
-                expires_at = int(result.stack[5].num, 16)
-
-                return NewProposalState(
-                    skipper_address=state.skipper_address,
-                    tonapi_client=state.tonapi_client,
-
-                    address=proposal_contract,
-
-                    proposal_data=ProposalData(
-                        proposal_id=proposal_id,
-                        is_initialized=is_initialized,
-                        is_executed=is_executed,
-                        votes_yes=votes_yes,
-                        votes_no=votes_no,
-                        expires_at=expires_at,
-                    )
-                )
+        proposal_data = await fetch_proposal_state(state, proposal_contract)
+        return NewProposalState(
+            skipper_address=state.skipper_address,
+            tonapi_client=state.tonapi_client,
+            address=proposal_contract,
+            proposal_data=proposal_data,
+        )
     return await traverse_children(state, trace.children, handle_new_proposal)
 
 
 async def handle_vote_proposal(state: BaseState, trace: Trace) -> Optional[BaseState]:
-    print("VOTE PROPOSAL HANDLER")  # TODO
-    return None
+    opcode = int(trace.transaction.in_msg.op_code, 16)
+    if opcode == 0x690202:
+        proposal_contract = trace.transaction.account.address.to_raw()
+        proposal_data = await fetch_proposal_state(state, proposal_contract)
+        return VoteProposalState(
+            skipper_address=state.skipper_address,
+            tonapi_client=state.tonapi_client,
+            address=proposal_contract,
+            proposal_data=proposal_data,
+        )
+    return await traverse_children(state, trace.children, handle_new_proposal)
 
 
 async def traverse_children(state: BaseState, children: list[Trace], func: HandlerFunc) -> Optional[BaseState]:
