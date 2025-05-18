@@ -1,6 +1,7 @@
 from typing import Optional
 
 from sqlalchemy import Engine, Select
+from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session, select
 from tonsdk.utils import Address
@@ -39,8 +40,31 @@ def insert_trace(engine: Engine, trace: TraceLog):
 
 def insert_proposal(engine: Engine, proposal: Proposal):
     with Session(engine) as session:
-        session.add(proposal)
+        stmt = insert(Proposal).values(
+            address=proposal.address,
+            dao=proposal.dao,
+            id=proposal.id,
+            is_initialized=proposal.is_initialized,
+            is_executed=proposal.is_executed,
+            votes_yes=proposal.votes_yes,
+            votes_no=proposal.votes_no,
+            expires_at=proposal.expires_at,
+        ).on_conflict_do_update(
+            index_elements=['address'],
+            set_={
+                "dao": proposal.dao,
+                "id": proposal.id,
+                "is_initialized": proposal.is_initialized,
+                "is_executed": proposal.is_executed,
+                "votes_yes": proposal.votes_yes,
+                "votes_no": proposal.votes_no,
+                "expires_at": proposal.expires_at,
+            }
+        )
+
         try:
+            session.exec(stmt)
             session.commit()
-        except IntegrityError:
-            pass
+        except IntegrityError as e:
+            session.rollback()
+            raise e
