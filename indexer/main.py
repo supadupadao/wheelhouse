@@ -12,7 +12,7 @@ from indexer.app.ton.api import list_new_traces, get_trace_info
 from indexer.app.ton.parser import parse_trace, NewProposalState, VoteProposalState
 from indexer.app.ton.utils import str_to_address
 from libs.db import init_db, TraceLog, Proposal, address_into_db_format
-from libs.error import BaseIndexerException
+from libs.error import BaseIndexerException, TonApiError, IndexerDataIsNotReady
 
 
 async def main(context: Context):
@@ -36,26 +36,38 @@ async def main(context: Context):
             await asyncio.sleep(5)
 
         for trace_id in traces:
-            logging.info("Processing trace %s", trace_id)
-            trace_info = await get_trace_info(tonapi_client, trace_id)
-            logging.info("Trace info: %s", trace_info)
-            parsed_trace = await parse_trace(raw_dao_address, tonapi_client, trace_info)
-            if isinstance(parsed_trace, NewProposalState) or isinstance(parsed_trace, VoteProposalState):
-                insert_proposal(context.db, Proposal(
-                    address=address_into_db_format(str_to_address(parsed_trace.address)),
-                    dao=dao_record.address,
-                    id=parsed_trace.proposal_data.proposal_id,
-                    is_initialized=parsed_trace.proposal_data.is_initialized,
-                    is_executed=parsed_trace.proposal_data.is_executed,
-                    votes_yes=parsed_trace.proposal_data.votes_yes,
-                    votes_no=parsed_trace.proposal_data.votes_no,
-                    expires_at=parsed_trace.proposal_data.expires_at,
-                ))
-            insert_trace(context.db, TraceLog(
-                dao=dao_record.address,
-                hash=trace_id,
-                utime=trace_info.transaction.utime
-            ))
+            while True:
+                try:
+                    logging.info("Processing trace %s", trace_id)
+                    trace_info = await get_trace_info(tonapi_client, trace_id)
+                    logging.info("Trace info: %s", trace_info)
+                    parsed_trace = await parse_trace(raw_dao_address, tonapi_client, trace_info)
+                except (TonApiError, IndexerDataIsNotReady) as err:
+                    logging.error("Error processing trace %s: %s", trace_id, err)
+                    await asyncio.sleep(3)
+                except BaseIndexerException as err:
+                    logging.error("Unexpected processing trace %s: %s", trace_id, err)
+                    break
+                else:
+                    if isinstance(parsed_trace, NewProposalState) or isinstance(parsed_trace, VoteProposalState):
+                        insert_proposal(context.db, Proposal(
+                            address=address_into_db_format(str_to_address(parsed_trace.address)),
+                            dao=dao_record.address,
+                            id=parsed_trace.proposal_data.proposal_id,
+                            is_initialized=parsed_trace.proposal_data.is_initialized,
+                            is_executed=parsed_trace.proposal_data.is_executed,
+                            votes_yes=parsed_trace.proposal_data.votes_yes,
+                            votes_no=parsed_trace.proposal_data.votes_no,
+                            expires_at=parsed_trace.proposal_data.expires_at,
+                        ))
+
+                    insert_trace(context.db, TraceLog(
+                        dao=dao_record.address,
+                        hash=trace_id,
+                        utime=trace_info.transaction.utime
+                    ))
+
+                    break
 
 
 if __name__ == "__main__":

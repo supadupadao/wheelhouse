@@ -7,7 +7,7 @@ from pytonapi.schema.traces import Trace
 from tonsdk.boc import Cell, Slice
 
 from indexer.app.ton import limiter
-from libs.error import TonApiError
+from libs.error import TonApiError, IndexerDataIsNotReady
 
 
 @dataclass
@@ -49,6 +49,9 @@ async def parse_trace(raw_skipper_address: str, tonapi_client: AsyncTonapi, trac
 
 
 async def find_skipper(state: BaseState, trace: Trace) -> Optional[BaseState]:
+    if len(trace.transaction.out_msgs) > 0:
+        raise IndexerDataIsNotReady("Skipper transaction is not executed yet")
+
     account_address = trace.transaction.account.address.to_raw()
     if account_address == state.skipper_address:
         msg_body = trace.transaction.in_msg.raw_body
@@ -104,6 +107,9 @@ async def fetch_proposal_state(state: BaseState, proposal_contract: str) -> Prop
 
 
 async def handle_new_proposal(state: BaseState, trace: Trace) -> Optional[BaseState]:
+    if len(trace.transaction.out_msgs) > 0:
+        raise IndexerDataIsNotReady("Skipper transaction is not executed yet")
+
     opcode = int(trace.transaction.in_msg.op_code, 16)
     if opcode == 0x690201:
         proposal_contract = trace.transaction.account.address.to_raw()
@@ -118,6 +124,9 @@ async def handle_new_proposal(state: BaseState, trace: Trace) -> Optional[BaseSt
 
 
 async def handle_vote_proposal(state: BaseState, trace: Trace) -> Optional[BaseState]:
+    if len(trace.transaction.out_msgs) > 0:
+        raise IndexerDataIsNotReady("Skipper transaction is not executed yet")
+
     opcode = int(trace.transaction.in_msg.op_code, 16)
     if opcode == 0x690202:
         proposal_contract = trace.transaction.account.address.to_raw()
@@ -129,6 +138,16 @@ async def handle_vote_proposal(state: BaseState, trace: Trace) -> Optional[BaseS
             proposal_data=proposal_data,
         )
     return await traverse_children(state, trace.children, handle_new_proposal)
+
+
+async def check_children_success(state: BaseState, trace: Trace) -> Optional[BaseState]:
+    if len(trace.transaction.out_msgs) > 0:
+        raise IndexerDataIsNotReady("Skipper transaction is not executed yet")
+    if not trace.transaction.success:
+        return None
+    await traverse_children(state, trace.children, check_children_success)
+
+    return state
 
 
 async def traverse_children(state: BaseState, children: list[Trace], func: HandlerFunc) -> Optional[BaseState]:
