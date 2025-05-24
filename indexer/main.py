@@ -36,15 +36,15 @@ async def main(context: Context):
             await asyncio.sleep(5)
 
         for trace_id in traces:
-            trace_info = await get_trace_info(tonapi_client, trace_id)
-            logging.info("Trace info: %s", trace_info)
             while True:
                 try:
                     logging.info("Processing trace %s", trace_id)
+                    trace_info = await get_trace_info(tonapi_client, trace_id)
+                    logging.info("Trace info: %s", trace_info)
                     parsed_trace = await parse_trace(raw_dao_address, tonapi_client, trace_info)
                 except (TonApiError, IndexerDataIsNotReady) as err:
                     logging.error("Error processing trace %s: %s", trace_id, err)
-                    await asyncio.sleep(1)
+                    await asyncio.sleep(3)
                 except BaseIndexerException as err:
                     logging.error("Unexpected processing trace %s: %s", trace_id, err)
                     break
