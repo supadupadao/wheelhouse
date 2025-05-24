@@ -21,32 +21,42 @@ services:
       - skipper
     restart: unless-stopped
 
-  migration:
-    image: rust:1.83
-    volumes:
-      - ./migration:/app
-    working_dir: /app
-    command:
-      - cargo
-      - run
-      - --
-      - up
-    environment:
-      DATABASE_URL: "postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@db:5432/${SKIPPER_DB:-skipper}"
-    restart: on-failure
-    networks:
-      - skipper
-    depends_on:
-      db:
-        condition: service_healthy
-        restart: true
+  # TODO
+  #  migration:
+  #    image: rust:1.83
+  #    volumes:
+  #      - ./migration:/app
+  #    working_dir: /app
+  #    command:
+  #      - cargo
+  #      - run
+  #      - --
+  #      - up
+  #    environment:
+  #      DATABASE_URL: "postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@db:5432/${SKIPPER_DB:-skipper}"
+  #    restart: on-failure
+  #    networks:
+  #      - skipper
+  #    depends_on:
+  #      db:
+  #        condition: service_healthy
+  #        restart: true
   
   indexer:
     build:
-      context: indexer
-    depends_on:
-      migration:
-        condition: service_completed_successfully
+      context: .
+      dockerfile: indexer/Dockerfile
+  #    depends_on:
+  #      migration:
+  #        condition: service_completed_successfully
+
+  api:
+    build:
+      context: .
+      dockerfile: api/Dockerfile
+  #    depends_on:
+  #      migration:
+  #        condition: service_completed_successfully
 
 networks:
   skipper:
