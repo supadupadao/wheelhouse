@@ -11,7 +11,7 @@ const router = createRouter({
       component: Home,
     },
     {
-      path: '/proposals/:dao',
+      path: '/:dao/proposals/',
       name: 'proposals_list',
       component: Proposals,
     },

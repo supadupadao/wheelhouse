@@ -2,6 +2,7 @@ from fastapi import APIRouter
 from pydantic import BaseModel
 from sqlmodel import select, Session
 
+from api.app.api.utils import APIAddress
 from api.app.db import engine
 from libs.db import Proposal, address_into_db_format
 from libs.db.utils import str_to_address
@@ -11,7 +12,7 @@ router = APIRouter(prefix="/proposals")
 
 class ProposalItem(BaseModel):
     id: int
-    # address: str  # TODO
+    address: APIAddress
     is_initialized: bool
     is_executed: bool
     votes_yes: int
@@ -36,6 +37,7 @@ async def list_proposals(dao: str) -> ProposalsList:
         proposals=[
             ProposalItem(
                 id=proposal.id,
+                address=APIAddress.parse_hash_part(proposal.address),
                 is_initialized=proposal.is_initialized,
                 is_executed=proposal.is_executed,
                 votes_yes=int(proposal.votes_yes),
