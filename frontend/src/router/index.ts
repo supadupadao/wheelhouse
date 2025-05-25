@@ -1,13 +1,19 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import Test from '@/views/Test.vue'
+import Proposals from '@/views/Proposals.vue'
+import Home from '@/views/Home.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
-      path: '/:dao',
+      path: '/',
+      name: 'home',
+      component: Home,
+    },
+    {
+      path: '/proposals/:dao',
       name: 'proposals_list',
-      component: Test,
+      component: Proposals,
     },
   ],
 })

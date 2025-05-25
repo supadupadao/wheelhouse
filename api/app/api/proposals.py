@@ -3,8 +3,8 @@ from pydantic import BaseModel
 from sqlmodel import select, Session
 
 from api.app.db import engine
-from indexer.app.ton.utils import str_to_address
 from libs.db import Proposal, address_into_db_format
+from libs.db.utils import str_to_address
 
 router = APIRouter(prefix="/proposals")
 

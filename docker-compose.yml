@@ -20,43 +20,58 @@ services:
     networks:
       - skipper
     restart: unless-stopped
-
-  # TODO
-  #  migration:
-  #    image: rust:1.83
-  #    volumes:
-  #      - ./migration:/app
-  #    working_dir: /app
-  #    command:
-  #      - cargo
-  #      - run
-  #      - --
-  #      - up
-  #    environment:
-  #      DATABASE_URL: "postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@db:5432/${SKIPPER_DB:-skipper}"
-  #    restart: on-failure
-  #    networks:
-  #      - skipper
-  #    depends_on:
-  #      db:
-  #        condition: service_healthy
-  #        restart: true
   
   indexer:
     build:
       context: .
       dockerfile: indexer/Dockerfile
-  #    depends_on:
-  #      migration:
-  #        condition: service_completed_successfully
+    environment:
+      INDEXER_DB_URL: "postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@db:5432/${SKIPPER_DB:-skipper}"
+      INDEXER_SKIPPER_ADDRESS: ${INDEXER_SKIPPER_ADDRESS}
+      INDEXER_TONAPI_TOKEN: ${INDEXER_TONAPI_TOKEN}
+    networks:
+      - skipper
+    depends_on:
+      db:
+        condition: service_healthy
+        restart: true
 
   api:
     build:
       context: .
       dockerfile: api/Dockerfile
-  #    depends_on:
-  #      migration:
-  #        condition: service_completed_successfully
+    environment:
+      API_DB_URL: "postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@db:5432/${SKIPPER_DB:-skipper}"
+    networks:
+      - skipper
+    depends_on:
+      db:
+        condition: service_healthy
+        restart: true
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    volumes:
+      - frontend_build:/app/dist
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    environment:
+      - NGINX_PORT=80
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - frontend_build:/usr/share/nginx/html:ro
+    networks:
+      - skipper
+    depends_on:
+      frontend:
+        condition: service_completed_successfully
+      api:
+        condition: service_started
 
 networks:
   skipper:
@@ -65,3 +80,4 @@ networks:
 
 volumes:
   postgres:
+  frontend_build:
