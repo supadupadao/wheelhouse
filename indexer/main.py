@@ -10,8 +10,8 @@ from indexer.app.logging_config import init_logging
 from indexer.app.ton import init_tonapi_client
 from indexer.app.ton.api import list_new_traces, get_trace_info
 from indexer.app.ton.parser import parse_trace, NewProposalState, VoteProposalState
-from indexer.app.ton.utils import str_to_address
 from libs.db import init_db, TraceLog, Proposal, address_into_db_format
+from libs.db.utils import str_to_address
 from libs.error import BaseIndexerException, TonApiError, IndexerDataIsNotReady
 
 

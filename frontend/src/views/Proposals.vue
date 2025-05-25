@@ -62,7 +62,7 @@ export default {
     }
   },
   async created() {
-    const result = await fetchProposalsList(this.$route.params.dao);
+    const result = await fetchProposalsList(this.$route.params.dao as string);
     this.proposals = result.proposals;
   },
   beforeMount() {
@@ -104,7 +104,7 @@ export default {
     newProposal() {
       const payload = beginCell()
         .storeUint(0x690101, 32)
-        .storeAddress(Address.parse(this.$route.params.dao))
+        .storeAddress(Address.parse(this.$route.params.dao as string))
         .storeBit(false)
         .storeRef(
           beginCell()
