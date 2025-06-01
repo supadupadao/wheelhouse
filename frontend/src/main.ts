@@ -11,7 +11,7 @@ const app = createApp(App);
   app.use(router);
 
   const tonConnectUI = new TonConnectUI({
-    manifestUrl: `${window.location.origin}/tonconnect-manifest.json`,
+    manifestUrl: `http://dao.supadupa.space/tonconnect-manifest.json`,
   });
 
   app.config.globalProperties.$tonConnectUI = tonConnectUI;

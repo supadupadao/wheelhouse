@@ -53,3 +53,13 @@ export async function fetchLockAddress(dao: string, owner: string): Promise<getL
   const result = await fetch("/api/getters/get_lock_address?" + params.toString());
   return await result.json() as getLockAddressResponse;
 }
+
+export interface getJettonMasterResponse {
+  address: APIAddress;
+}
+
+export async function fetchJettonMaster(dao: string): Promise<getJettonMasterResponse> {
+  const params = new URLSearchParams({ dao });
+  const result = await fetch("/api/getters/get_jetton_master?" + params.toString());
+  return await result.json() as getJettonMasterResponse;
+}
