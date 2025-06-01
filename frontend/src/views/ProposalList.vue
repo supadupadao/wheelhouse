@@ -11,8 +11,8 @@
 
   <div v-if="isConnected" class="box">
     <button @click="jettonFaucet">Jetton faucet</button>
-    <button @click="newProposal">New proposal</button>
     <button @click="lockJetton">Lock Jetton</button>
+    <button @click="newProposal">New proposal</button>
   </div>
 
   <hr />
@@ -51,9 +51,9 @@
 
 <script lang="ts">
 import { fetchJettonMaster, fetchLockAddress, fetchProposalsList, fetchWalletAddress, type ProposalData } from "@/api";
-import { Address, beginCell, toNano } from "@ton/core";
+import { Address, beginCell, Cell, toNano } from "@ton/core";
 import { CHAIN } from "@tonconnect/ui";
-import { error } from "console";
+import lockContract from "@/assets/lockContract.json";
 
 export default {
   data() {
@@ -119,12 +119,34 @@ export default {
         .storeAddress(this.lockAddress)
         .storeMaybeRef(null)
         .storeCoins(toNano("0.01"))
-        .endCell()
+        .endCell();
+
+      const codeCell = Cell.fromBase64(lockContract.code);
+      const systemCell = Cell.fromBase64(lockContract.system);
+      const initData = beginCell()
+        .storeRef(systemCell)
+        .storeUint(0, 1)
+        .storeAddress(this.myAddress)
+        .storeAddress(this.jettonMaster!)
+        .endCell();
 
       this.$tonConnectUI.sendTransaction({
         validUntil: Math.floor(Date.now() / 1000) + 360,
         network: CHAIN.TESTNET,
         messages: [
+          {
+            address: this.lockAddress?.toString() || "",
+            amount: toNano('0.1').toString(),
+            stateInit: beginCell()
+              .storeBit(false)
+              .storeBit(false)
+              .storeMaybeRef(codeCell)
+              .storeMaybeRef(initData)
+              .storeUint(0, 1)
+              .endCell()
+              .toBoc()
+              .toString('base64'),
+          },
           {
             address: this.jettonWalletAddress?.toString() || "",
             amount: toNano('0.1').toString(),
@@ -147,6 +169,15 @@ export default {
         )
         .endCell()
 
+      const codeCell = Cell.fromBase64(lockContract.code);
+      const systemCell = Cell.fromBase64(lockContract.system);
+      const initData = beginCell()
+        .storeRef(systemCell)
+        .storeUint(0, 1)
+        .storeAddress(this.myAddress)
+        .storeAddress(this.jettonMaster!)
+        .endCell();
+
       this.$tonConnectUI.sendTransaction({
         validUntil: Math.floor(Date.now() / 1000) + 360,
         network: CHAIN.TESTNET,
@@ -155,6 +186,15 @@ export default {
             address: this.lockAddress?.toString() || "",
             amount: toNano('0.1').toString(),
             payload: payload.toBoc().toString('base64'),
+            stateInit: beginCell()
+              .storeBit(false)
+              .storeBit(false)
+              .storeMaybeRef(codeCell)
+              .storeMaybeRef(initData)
+              .storeUint(0, 1)
+              .endCell()
+              .toBoc()
+              .toString('base64'),
           },
         ],
       });
