@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import Proposals from '@/views/Proposals.vue'
 import Home from '@/views/Home.vue'
+import ProposalList from '@/views/ProposalList.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -13,7 +13,7 @@ const router = createRouter({
     {
       path: '/:dao/proposals/',
       name: 'proposals_list',
-      component: Proposals,
+      component: ProposalList,
     },
   ],
 })
