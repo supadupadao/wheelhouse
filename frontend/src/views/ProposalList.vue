@@ -7,6 +7,7 @@
   </div>
 
   <div v-if="isConnected" class="box">
+    <button @click="jettonFaucet">Jetton faucet</button>
     <button @click="newProposal">New proposal</button>
     <button @click="lockJetton">Lock Jetton</button>
   </div>
@@ -46,7 +47,7 @@
 </style>
 
 <script lang="ts">
-import { fetchLockAddress, fetchProposalsList, fetchWalletAddress, type ProposalData } from "@/api";
+import { fetchJettonMaster, fetchLockAddress, fetchProposalsList, fetchWalletAddress, type ProposalData } from "@/api";
 import { Address, beginCell, toNano } from "@ton/core";
 import { CHAIN } from "@tonconnect/ui";
 
@@ -56,6 +57,7 @@ export default {
       daoAddress: Address.parse(this.$route.params.dao as string),
       lockAddress: null as Address | null,
       jettonWalletAddress: null as Address | null,
+      jettonMaster: null as Address | null,
       proposals: [] as ProposalData[],
       isConnected: false,
       myAddress: null as Address | null,
@@ -81,6 +83,10 @@ export default {
       const lockAddressResponse = await fetchLockAddress(this.daoAddress.toString(), myAddress.toString());
       console.log("Lock address response", lockAddressResponse);
       this.lockAddress = Address.parse(lockAddressResponse.address.raw);
+
+      const jettonMasterResponse = await fetchJettonMaster(this.daoAddress.toString());
+      console.log("Lock address response", jettonMasterResponse);
+      this.jettonMaster = Address.parse(jettonMasterResponse.address.raw);
     });
   },
   methods: {
@@ -166,6 +172,26 @@ export default {
         messages: [
           {
             address: this.lockAddress?.toString() || "",
+            amount: toNano('0.2').toString(),
+            payload: payload.toBoc().toString('base64'),
+          },
+        ],
+      });
+    },
+    jettonFaucet() {
+      const payload = beginCell()
+        .storeUint(0x133704, 32)
+        .storeUint(0, 64)
+        .storeAddress(this.myAddress)
+        .storeCoins(1)
+        .endCell()
+
+      this.$tonConnectUI.sendTransaction({
+        validUntil: Math.floor(Date.now() / 1000) + 360,
+        network: CHAIN.TESTNET,
+        messages: [
+          {
+            address: this.jettonMaster?.toString() || "",
             amount: toNano('0.2').toString(),
             payload: payload.toBoc().toString('base64'),
           },
