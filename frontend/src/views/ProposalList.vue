@@ -1,4 +1,7 @@
 <template>
+  <div v-if="loading" class="box">
+    <p>Loading... please wait.</p>
+  </div>
   <div v-if="!isConnected" class="box">
     <button @click="openModal">Connect Wallet</button>
   </div>
@@ -50,10 +53,12 @@
 import { fetchJettonMaster, fetchLockAddress, fetchProposalsList, fetchWalletAddress, type ProposalData } from "@/api";
 import { Address, beginCell, toNano } from "@ton/core";
 import { CHAIN } from "@tonconnect/ui";
+import { error } from "console";
 
 export default {
   data() {
     return {
+      loading: true,
       daoAddress: Address.parse(this.$route.params.dao as string),
       lockAddress: null as Address | null,
       jettonWalletAddress: null as Address | null,
@@ -66,9 +71,12 @@ export default {
   async created() {
     const result = await fetchProposalsList(this.daoAddress.toString());
     this.proposals = result.proposals;
+    this.loading = false;
   },
   beforeMount() {
     this.$tonConnectUI.onStatusChange(async (walletAndwalletInfo) => {
+      this.loading = true;
+
       this.isConnected = true;
       const myAddress = Address.parse(walletAndwalletInfo?.account.address || "");
 
@@ -85,8 +93,10 @@ export default {
       this.lockAddress = Address.parse(lockAddressResponse.address.raw);
 
       const jettonMasterResponse = await fetchJettonMaster(this.daoAddress.toString());
-      console.log("Lock address response", jettonMasterResponse);
+      console.log("Jetton master response", jettonMasterResponse);
       this.jettonMaster = Address.parse(jettonMasterResponse.address.raw);
+
+      this.loading = false;
     });
   },
   methods: {
