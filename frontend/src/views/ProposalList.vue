@@ -222,7 +222,7 @@ export default {
         messages: [
           {
             address: this.lockAddress?.toString() || "",
-            amount: toNano('0.2').toString(),
+            amount: toNano('0.6').toString(),
             payload: payload.toBoc().toString('base64'),
           },
         ],
