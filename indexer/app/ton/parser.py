@@ -42,7 +42,9 @@ class VoteProposalState(BaseState):
 HandlerFunc = Callable[[BaseState, Trace], Awaitable[Optional[BaseState]]]
 
 
-async def parse_trace(raw_skipper_address: str, tonapi_client: AsyncTonapi, trace_info: Trace):
+async def parse_trace(
+    raw_skipper_address: str, tonapi_client: AsyncTonapi, trace_info: Trace
+):
     state = BaseState(skipper_address=raw_skipper_address, tonapi_client=tonapi_client)
 
     return await traverse_children(state, trace_info.children or [], find_skipper)
@@ -72,9 +74,13 @@ async def find_skipper(state: BaseState, trace: Trace) -> Optional[BaseState]:
             proxy_opcode = payload_parser.read_uint(32)
 
             if proxy_opcode == 0x690401:
-                return await traverse_children(state, trace.children, handle_new_proposal)
+                return await traverse_children(
+                    state, trace.children, handle_new_proposal
+                )
             if proxy_opcode == 0x690402:
-                return await traverse_children(state, trace.children, handle_vote_proposal)
+                return await traverse_children(
+                    state, trace.children, handle_vote_proposal
+                )
 
     if trace.children is not None:
         logging.info("Parsing children")
@@ -82,10 +88,13 @@ async def find_skipper(state: BaseState, trace: Trace) -> Optional[BaseState]:
     return None
 
 
-async def fetch_proposal_state(state: BaseState, proposal_contract: str) -> ProposalData:
+async def fetch_proposal_state(
+    state: BaseState, proposal_contract: str
+) -> ProposalData:
     async with limiter:
-        result = await state.tonapi_client.blockchain.execute_get_method(proposal_contract,
-                                                                         "get_proposal_data")
+        result = await state.tonapi_client.blockchain.execute_get_method(
+            proposal_contract, "get_proposal_data"
+        )
     if result.success:
         proposal_id = int(result.stack[0].num, 16)
         is_initialized = bool(int(result.stack[1].num, 16))
@@ -137,7 +146,7 @@ async def handle_vote_proposal(state: BaseState, trace: Trace) -> Optional[BaseS
             address=proposal_contract,
             proposal_data=proposal_data,
         )
-    return await traverse_children(state, trace.children, handle_new_proposal)
+    return await traverse_children(state, trace.children, handle_vote_proposal)
 
 
 async def check_children_success(state: BaseState, trace: Trace) -> Optional[BaseState]:
@@ -150,7 +159,9 @@ async def check_children_success(state: BaseState, trace: Trace) -> Optional[Bas
     return state
 
 
-async def traverse_children(state: BaseState, children: list[Trace], func: HandlerFunc) -> Optional[BaseState]:
+async def traverse_children(
+    state: BaseState, children: list[Trace], func: HandlerFunc
+) -> Optional[BaseState]:
     if not children:
         return None
     for child in children:
