@@ -28,7 +28,12 @@ async def main(context: Context):
         last_indexed_trace = get_last_trace(context.db, dao_record)
         logging.info("Last indexed trace %s", last_indexed_trace)
 
-        traces = await list_new_traces(tonapi_client, last_indexed_trace, dao_address.to_string())
+        try:
+            traces = await list_new_traces(tonapi_client, last_indexed_trace, dao_address.to_string())
+        except Exception as err:
+            logging.error("Error fetching traces: %s", err)
+            await asyncio.sleep(3)
+            continue
         logging.info("Fetched traces: %s", traces)
 
         if not traces:

@@ -1,4 +1,7 @@
 <template>
+  <div v-if="loading" class="box">
+    <p>Loading... please wait.</p>
+  </div>
   <div v-if="!isConnected" class="box">
     <button @click="openModal">Connect Wallet</button>
   </div>
@@ -8,8 +11,8 @@
 
   <div v-if="isConnected" class="box">
     <button @click="jettonFaucet">Jetton faucet</button>
-    <button @click="newProposal">New proposal</button>
     <button @click="lockJetton">Lock Jetton</button>
+    <button @click="newProposal">New proposal</button>
   </div>
 
   <hr />
@@ -48,12 +51,14 @@
 
 <script lang="ts">
 import { fetchJettonMaster, fetchLockAddress, fetchProposalsList, fetchWalletAddress, type ProposalData } from "@/api";
-import { Address, beginCell, toNano } from "@ton/core";
+import { Address, beginCell, Cell, toNano } from "@ton/core";
 import { CHAIN } from "@tonconnect/ui";
+import lockContract from "@/assets/lockContract.json";
 
 export default {
   data() {
     return {
+      loading: true,
       daoAddress: Address.parse(this.$route.params.dao as string),
       lockAddress: null as Address | null,
       jettonWalletAddress: null as Address | null,
@@ -66,9 +71,12 @@ export default {
   async created() {
     const result = await fetchProposalsList(this.daoAddress.toString());
     this.proposals = result.proposals;
+    this.loading = false;
   },
   beforeMount() {
     this.$tonConnectUI.onStatusChange(async (walletAndwalletInfo) => {
+      this.loading = true;
+
       this.isConnected = true;
       const myAddress = Address.parse(walletAndwalletInfo?.account.address || "");
 
@@ -85,8 +93,10 @@ export default {
       this.lockAddress = Address.parse(lockAddressResponse.address.raw);
 
       const jettonMasterResponse = await fetchJettonMaster(this.daoAddress.toString());
-      console.log("Lock address response", jettonMasterResponse);
+      console.log("Jetton master response", jettonMasterResponse);
       this.jettonMaster = Address.parse(jettonMasterResponse.address.raw);
+
+      this.loading = false;
     });
   },
   methods: {
@@ -109,12 +119,34 @@ export default {
         .storeAddress(this.lockAddress)
         .storeMaybeRef(null)
         .storeCoins(toNano("0.01"))
-        .endCell()
+        .endCell();
+
+      const codeCell = Cell.fromBase64(lockContract.code);
+      const systemCell = Cell.fromBase64(lockContract.system);
+      const initData = beginCell()
+        .storeRef(systemCell)
+        .storeUint(0, 1)
+        .storeAddress(this.myAddress)
+        .storeAddress(this.jettonMaster!)
+        .endCell();
 
       this.$tonConnectUI.sendTransaction({
         validUntil: Math.floor(Date.now() / 1000) + 360,
         network: CHAIN.TESTNET,
         messages: [
+          {
+            address: this.lockAddress?.toString() || "",
+            amount: toNano('0.1').toString(),
+            stateInit: beginCell()
+              .storeBit(false)
+              .storeBit(false)
+              .storeMaybeRef(codeCell)
+              .storeMaybeRef(initData)
+              .storeUint(0, 1)
+              .endCell()
+              .toBoc()
+              .toString('base64'),
+          },
           {
             address: this.jettonWalletAddress?.toString() || "",
             amount: toNano('0.1').toString(),
@@ -137,6 +169,15 @@ export default {
         )
         .endCell()
 
+      const codeCell = Cell.fromBase64(lockContract.code);
+      const systemCell = Cell.fromBase64(lockContract.system);
+      const initData = beginCell()
+        .storeRef(systemCell)
+        .storeUint(0, 1)
+        .storeAddress(this.myAddress)
+        .storeAddress(this.jettonMaster!)
+        .endCell();
+
       this.$tonConnectUI.sendTransaction({
         validUntil: Math.floor(Date.now() / 1000) + 360,
         network: CHAIN.TESTNET,
@@ -145,6 +186,15 @@ export default {
             address: this.lockAddress?.toString() || "",
             amount: toNano('0.1').toString(),
             payload: payload.toBoc().toString('base64'),
+            stateInit: beginCell()
+              .storeBit(false)
+              .storeBit(false)
+              .storeMaybeRef(codeCell)
+              .storeMaybeRef(initData)
+              .storeUint(0, 1)
+              .endCell()
+              .toBoc()
+              .toString('base64'),
           },
         ],
       });
