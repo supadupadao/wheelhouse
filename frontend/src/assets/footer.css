@@ -1,0 +1,7 @@
+.footer {
+  @apply bg-zinc-50 text-black;
+
+  .inner {
+    @apply max-w-6xl mx-auto py-8 flex items-center justify-between;
+  }
+}
