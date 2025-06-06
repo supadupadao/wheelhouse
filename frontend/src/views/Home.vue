@@ -9,27 +9,15 @@
     To get started, choose a DAO from the list below
   </p>
 
-  <ul>
-    <li v-for="dao in daos" :key="dao.address.raw">
-      <router-link :to="`/${dao.address.raw}/proposals`">
-        DAO - {{ dao.address.user_friendly }}
-      </router-link>
-    </li>
-  </ul>
+  <DAOList />
 </template>
 
 <script lang="ts">
-import { fetchDaoList, type DaoData } from '@/api';
+import DAOList from '@/components/DAOList.vue';
 
 export default {
-  data() {
-    return {
-      daos: [] as DaoData[],
-    }
+  components: {
+    DAOList,
   },
-  async created() {
-    const result = await fetchDaoList();
-    this.daos = result.dao;
-  }
 }
 </script>

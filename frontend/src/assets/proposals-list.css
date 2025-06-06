@@ -1,0 +1,11 @@
+.dao-title-block {
+  @apply py-8;
+
+  .dao-title {
+    @apply text-2xl font-extrabold;
+  }
+
+  .dao-address {
+    @apply text-lg font-normal text-neutral-500;
+  }
+}

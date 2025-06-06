@@ -1,0 +1,31 @@
+.header {
+  @apply bg-zinc-50 text-black mb-11;
+
+  .inner {
+    @apply max-w-6xl mx-auto py-5 flex items-center justify-between;
+
+    .logo {
+      @apply flex-1 text-xl;
+    }
+
+    .menu-block {
+      @apply flex-1 text-center space-x-6;
+
+      .menu-item {
+        @apply hover:underline;
+      }
+
+      .menu-item--disabled {
+        @apply opacity-50 cursor-not-allowed;
+      }
+    }
+  }
+
+  .right-block {
+    @apply flex-1 flex justify-end items-center space-x-4;
+
+    .connect-wallet-button {
+      @apply bg-black text-white px-4 py-2;
+    }
+  }
+}
