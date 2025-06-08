@@ -1,0 +1,28 @@
+@import "tailwindcss";
+
+@import './header.css';
+
+:root {
+  --spacing: 8px;
+  --tw-space-x-reverse: 8px;
+
+  --text-sm: 16px;
+  --text-base: 18px;
+  --text-lg: 20px;
+  --text-xl: 22px;
+  --text-2xl: 24px;
+
+  --website-width: 1136px;
+
+  --main-text-color: #000000;
+  --gray-text-color: #828282;
+  --white-text-color: #FFFFFF;
+
+  --header-bg-color: #FCFCFC;
+  --footer-bg-color: #FCFCFC;
+
+  font-family: "Manrope", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: normal;
+  font-style: normal;
+}

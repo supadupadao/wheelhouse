@@ -1,24 +1,22 @@
 <template>
   <header class="header">
     <div class="inner">
-      <div class="logo">
-        <a href="/">
-          <i>SupaDupa</i><b>DAO</b>
-        </a>
+      <div class="header-item logo">
+        <a href="/"><i>SupaDupa</i><b>DAO</b></a>
       </div>
 
-      <nav class="menu-block">
-        <a href="/" class="menu-item">Home</a>
-        <a href="https://docs.supadupa.space" class="menu-item">Docs</a>
-        <a href="#" class="menu-item--disabled">About us</a>
+      <nav class="header-item nav-menu">
+        <a href="#" class="nav-menu__item">Страничка</a>
+        <a href="#" class="nav-menu__item active">Предложения</a>
+        <a href="#" class="nav-menu__item">Страничка</a>
       </nav>
 
-      <div class="right-block">
-        <a href="https://github.com/supadupadao" target="_blank" class="hover:underline"><i class="fa-brands fa-github fa-2x"></i></a>
-
-        <button class="connect-wallet-button">
-          Connect Wallet
-        </button>
+      <div class="header-item nav-actions">
+        <i class="fa-brands fa-github fa-2x"></i>
+        <div class="language-switcher">
+          <i class="fa-solid fa-chevron-down"></i>
+          EN
+        </div>
       </div>
     </div>
   </header>
