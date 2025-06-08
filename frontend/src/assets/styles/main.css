@@ -39,7 +39,7 @@
 }
 
 @layer components {
-  button.button {
+  button.button[type=button] {
     --button-bg-color: #000000;
     --button-text-color: #FFFFFF;
     --button-border-raduis: 24px;
@@ -47,7 +47,7 @@
     @apply p-2 cursor-pointer text-xl bg-(--button-bg-color) text-(--button-text-color) rounded-(--button-border-raduis);
 
     &.outline {
-      --button-text-color: #000000;
+      --button-text-color: #828282;
 
       @apply bg-transparent border-1;
     }
@@ -58,6 +58,15 @@
       --button-text-color: #000000;
 
       @apply bg-linear-to-bl from-(--start-color) to-(--end-color) border-1;
+    }
+
+    &.small {
+      @apply p-1 text-sm;
+    }
+
+    &.orange {
+      --button-bg-color: #F27F3D;
+      --button-text-color: #FFFFFF;
     }
   }
 

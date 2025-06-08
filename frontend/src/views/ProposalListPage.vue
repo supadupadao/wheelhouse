@@ -1,6 +1,6 @@
 <template>
   <div class="block">
-    <span class="dao-title">DAO Skipper</span> <span class="dao-address">{{ daoAddress }}</span><i v-if="loading" class="fa-solid fa-spinner fa-spin-pulse"></i>
+    <span class="dao-title">DAO Skipper</span> <span class="dao-address">{{ userFriendlyAddress }}</span><i v-if="loading" class="fa-solid fa-spinner fa-spin-pulse"></i>
   </div>
 
   <div class="block">
@@ -42,9 +42,11 @@
 
 <script lang="ts">
 import { fetchProposalsList, type ProposalData } from '@/api';
+import { cropTonAddress } from '@/utils';
 import { Address } from '@ton/core';
 
 export default {
+  inject: ['wallet'],
   data() {
     return {
       loading: true,
@@ -57,5 +59,10 @@ export default {
     this.proposals = result.proposals;
     this.loading = false;
   },
+  computed: {
+    userFriendlyAddress() {
+      return cropTonAddress(this.daoAddress);
+    }
+  }
 }
 </script>

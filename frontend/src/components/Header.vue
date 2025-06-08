@@ -16,8 +16,30 @@
           <i class="fa-solid fa-chevron-down"></i>
           EN
         </div>
+        <div v-if="!wallet?.state.connected" @click="wallet?.openModal">
+          <button type="button" class="button small orange">
+            Connect wallet
+          </button>
+        </div>
+        <div v-if="wallet?.state.connected" @click="wallet?.disconnect">{{ userFriendlyAddress }}</div>
       </div>
     </div>
   </header>
 </template>
 
+<script>
+import { cropTonAddress } from '@/utils';
+
+export default {
+  inject: ['wallet'],
+  computed: {
+    userFriendlyAddress() {
+      if (this.wallet.state.connected) {
+        return cropTonAddress(this.wallet.state.address);
+      } else {
+        return `Wallet`
+      }
+    }
+  }
+}
+</script>
