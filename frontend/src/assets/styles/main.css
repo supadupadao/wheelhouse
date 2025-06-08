@@ -39,12 +39,38 @@
 }
 
 @layer components {
+  button.button {
+    --button-bg-color: #000000;
+    --button-text-color: #FFFFFF;
+    --button-border-raduis: 24px;
+
+    @apply p-2 cursor-pointer text-xl bg-(--button-bg-color) text-(--button-text-color) rounded-(--button-border-raduis);
+
+    &.outline {
+      --button-text-color: #000000;
+
+      @apply bg-transparent border-1;
+    }
+
+    &.gradient {
+      --start-color: #E7FFFE;
+      --end-color: #FFBF83;
+      --button-text-color: #000000;
+
+      @apply bg-linear-to-bl from-(--start-color) to-(--end-color) border-1;
+    }
+  }
+
   h1 {
-    @apply text-3xl font-extrabold;
+    @apply text-3xl font-extrabold pb-2;
   }
 
   .block {
     @apply py-5;
+
+    * {
+      @apply my-1;
+    }
   }
 
   table.table {
@@ -53,6 +79,7 @@
     --table-header-text-color: #FFFFFF;
     --table-row-bg-color: #FCFCFC;
     --table-row-text-color: #000000;
+    --table-row-separator-color: #EDEDED;
 
     @apply size-full text-xl;
 
@@ -60,7 +87,7 @@
       @apply bg-(--table-header-bg-color) text-(--table-header-text-color);
 
       th {
-        @apply p-4;
+        @apply p-4 text-left;
 
         &:first-child {
           @apply rounded-l-(--table-border-radius);
@@ -72,36 +99,42 @@
       }
     }
 
-    tbody tr {
+    tbody {
       @apply bg-(--table-row-bg-color) text-(--table-row-text-color);
 
-      td {
-        @apply p-4;
+      tr {
+        &:not(&:last-child) {
+          @apply border-b-1 border-b-(--table-row-separator-color);
+        }
+
+        td {
+          @apply p-4 text-left;
+
+          &:first-child {
+            @apply mt-4;
+          }
+        }
 
         &:first-child {
-          @apply mt-4;
+          td:first-child {
+            @apply rounded-tl-(--table-border-radius);
+          }
+
+          td:last-child {
+            @apply rounded-tr-(--table-border-radius);
+          }
+        }
+
+        &:last-child {
+          td:first-child {
+            @apply rounded-bl-(--table-border-radius);
+          }
+
+          td:last-child {
+            @apply rounded-br-(--table-border-radius);
+          }
         }
       }
-
-      &:first-child {
-        td:first-child {
-          @apply rounded-tl-(--table-border-radius);
-        }
-
-        td:last-child {
-          @apply rounded-tr-(--table-border-radius);
-        }
       }
-
-      &:last-child {
-        td:first-child {
-          @apply rounded-bl-(--table-border-radius);
-        }
-
-        td:last-child {
-          @apply rounded-br-(--table-border-radius);
-        }
-      }
-    }
   }
 }

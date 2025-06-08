@@ -5,3 +5,7 @@
 .dao-address {
   @apply text-base text-(--gray-text-color) font-normal;
 }
+
+.proposals-actions {
+  @apply flex items-center justify-between;
+}

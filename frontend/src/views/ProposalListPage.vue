@@ -6,6 +6,17 @@
   <div class="block">
     <h1>Proposals</h1>
 
+    <div class="proposals-actions">
+      <div>
+        <button type="button" class="button">All proposals</button>
+        <button type="button" class="button outline">Open</button>
+        <button type="button" class="button outline">Closed</button>
+      </div>
+      <div>
+        <button type="button" class="button gradient">New proposal</button>
+      </div>
+    </div>
+
     <table class="table">
       <thead>
         <tr>
