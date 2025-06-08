@@ -1,0 +1,149 @@
+@import "tailwindcss";
+
+@import './header.css';
+@import './footer.css';
+@import './proposals-list.css';
+
+:root {
+  --spacing: 8px;
+  --tw-space-x-reverse: 8px;
+
+  --text-sm: 16px;
+  --text-base: 18px;
+  --text-lg: 20px;
+  --text-xl: 22px;
+  --text-2xl: 24px;
+  --text-3xl: 32px;
+
+  --website-width: 1136px;
+
+  --main-text-color: #000000;
+  --gray-text-color: #828282;
+  --white-text-color: #FFFFFF;
+
+  --header-bg-color: #FCFCFC;
+  --footer-bg-color: #FCFCFC;
+
+  font-family: "Manrope", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: normal;
+  font-style: normal;
+}
+
+.website {
+  @apply flex flex-col min-h-screen;
+
+  .main {
+    @apply max-w-(--website-width) mx-auto flex-grow size-full;
+  }
+}
+
+@layer components {
+  button.button[type=button] {
+    --button-bg-color: #000000;
+    --button-text-color: #FFFFFF;
+    --button-border-raduis: 24px;
+
+    @apply p-2 cursor-pointer text-xl bg-(--button-bg-color) text-(--button-text-color) rounded-(--button-border-raduis);
+
+    &.outline {
+      --button-text-color: #828282;
+
+      @apply bg-transparent border-1;
+    }
+
+    &.gradient {
+      --start-color: #E7FFFE;
+      --end-color: #FFBF83;
+      --button-text-color: #000000;
+
+      @apply bg-linear-to-bl from-(--start-color) to-(--end-color) border-1;
+    }
+
+    &.small {
+      @apply p-1 text-sm;
+    }
+
+    &.orange {
+      --button-bg-color: #F27F3D;
+      --button-text-color: #FFFFFF;
+    }
+  }
+
+  h1 {
+    @apply text-3xl font-extrabold pb-2;
+  }
+
+  .block {
+    @apply py-5;
+
+    * {
+      @apply my-1;
+    }
+  }
+
+  table.table {
+    --table-border-radius: 24px;
+    --table-header-bg-color: #000000;
+    --table-header-text-color: #FFFFFF;
+    --table-row-bg-color: #FCFCFC;
+    --table-row-text-color: #000000;
+    --table-row-separator-color: #EDEDED;
+
+    @apply size-full text-xl;
+
+    thead {
+      @apply bg-(--table-header-bg-color) text-(--table-header-text-color);
+
+      th {
+        @apply p-4 text-left;
+
+        &:first-child {
+          @apply rounded-l-(--table-border-radius);
+        }
+
+        &:last-child {
+          @apply rounded-r-(--table-border-radius);
+        }
+      }
+    }
+
+    tbody {
+      @apply bg-(--table-row-bg-color) text-(--table-row-text-color);
+
+      tr {
+        &:not(&:last-child) {
+          @apply border-b-1 border-b-(--table-row-separator-color);
+        }
+
+        td {
+          @apply p-4 text-left;
+
+          &:first-child {
+            @apply mt-4;
+          }
+        }
+
+        &:first-child {
+          td:first-child {
+            @apply rounded-tl-(--table-border-radius);
+          }
+
+          td:last-child {
+            @apply rounded-tr-(--table-border-radius);
+          }
+        }
+
+        &:last-child {
+          td:first-child {
+            @apply rounded-bl-(--table-border-radius);
+          }
+
+          td:last-child {
+            @apply rounded-br-(--table-border-radius);
+          }
+        }
+      }
+      }
+  }
+}

@@ -1,0 +1,10 @@
+@layer components {
+  .footer {
+    @apply bg-(--footer-bg-color) py-4;
+
+    .inner {
+      @apply max-w-(--website-width) mx-auto size-full;
+      @apply flex items-center justify-between;
+    }
+  }
+}
