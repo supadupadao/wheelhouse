@@ -1,9 +1,9 @@
 @layer components {
   .header {
-    @apply bg-(--header-bg-color) py-4;
+    @apply bg-(--header-bg-color) py-5;
 
     .inner {
-      @apply max-w-(--website-width) mx-auto;
+      @apply max-w-(--website-width) mx-auto size-full;
       @apply flex items-center justify-between;
     }
 

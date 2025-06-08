@@ -1,6 +1,8 @@
 @import "tailwindcss";
 
 @import './header.css';
+@import './footer.css';
+@import './proposals-list.css';
 
 :root {
   --spacing: 8px;
@@ -11,6 +13,7 @@
   --text-lg: 20px;
   --text-xl: 22px;
   --text-2xl: 24px;
+  --text-3xl: 32px;
 
   --website-width: 1136px;
 
@@ -25,4 +28,80 @@
   font-optical-sizing: auto;
   font-weight: normal;
   font-style: normal;
+}
+
+.website {
+  @apply flex flex-col min-h-screen;
+
+  .main {
+    @apply max-w-(--website-width) mx-auto flex-grow size-full;
+  }
+}
+
+@layer components {
+  h1 {
+    @apply text-3xl font-extrabold;
+  }
+
+  .block {
+    @apply py-5;
+  }
+
+  table.table {
+    --table-border-radius: 24px;
+    --table-header-bg-color: #000000;
+    --table-header-text-color: #FFFFFF;
+    --table-row-bg-color: #FCFCFC;
+    --table-row-text-color: #000000;
+
+    @apply size-full text-xl;
+
+    thead {
+      @apply bg-(--table-header-bg-color) text-(--table-header-text-color);
+
+      th {
+        @apply p-4;
+
+        &:first-child {
+          @apply rounded-l-(--table-border-radius);
+        }
+
+        &:last-child {
+          @apply rounded-r-(--table-border-radius);
+        }
+      }
+    }
+
+    tbody tr {
+      @apply bg-(--table-row-bg-color) text-(--table-row-text-color);
+
+      td {
+        @apply p-4;
+
+        &:first-child {
+          @apply mt-4;
+        }
+      }
+
+      &:first-child {
+        td:first-child {
+          @apply rounded-tl-(--table-border-radius);
+        }
+
+        td:last-child {
+          @apply rounded-tr-(--table-border-radius);
+        }
+      }
+
+      &:last-child {
+        td:first-child {
+          @apply rounded-bl-(--table-border-radius);
+        }
+
+        td:last-child {
+          @apply rounded-br-(--table-border-radius);
+        }
+      }
+    }
+  }
 }

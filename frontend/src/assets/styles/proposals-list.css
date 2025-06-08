@@ -1,0 +1,7 @@
+.dao-title {
+  @apply text-2xl text-(--main-text-color) font-extrabold;
+}
+
+.dao-address {
+  @apply text-base text-(--gray-text-color) font-normal;
+}

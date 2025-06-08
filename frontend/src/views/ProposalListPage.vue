@@ -1,22 +1,49 @@
 <template>
-  <div class="dao-title-block">
+  <div class="block">
     <span class="dao-title">DAO Skipper</span> <span class="dao-address">{{ daoAddress }}</span>
   </div>
 
   <div class="block">
-    <h1>My balance</h1>
+    <h1>Proposals</h1>
+
+    <table class="table">
+      <thead>
+        <tr>
+          <th>№</th>
+          <th>Title</th>
+          <th>Status</th>
+          <th>Votes</th>
+          <th>Date</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="proposal in proposals">
+          <td>{{ proposal.id }}</td>
+          <td>Proposal</td>
+          <td>Status</td>
+          <td>{{ proposal.votes_yes }} - {{ proposal.votes_no }}</td>
+          <td>{{ proposal.expires_at }}</td>
+        </tr>
+      </tbody>
+    </table>
   </div>
 </template>
 
 <script lang="ts">
+import { fetchProposalsList, type ProposalData } from '@/api';
 import { Address } from '@ton/core';
 
 export default {
   data() {
     return {
-      daoAddress: Address.parse(this.$route.params.dao as string)
+      daoAddress: Address.parse(this.$route.params.dao as string),
+      proposals: [] as ProposalData[],
     }
-  }
+  },
+  async created() {
+    const result = await fetchProposalsList(this.daoAddress.toString());
+    this.proposals = result.proposals;
+  },
 }
 
 // import { fetchJettonMaster, fetchLockAddress, fetchProposalsList, fetchWalletAddress, type ProposalData } from "@/api";
