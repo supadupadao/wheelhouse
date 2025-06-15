@@ -1,9 +1,9 @@
 .dao-title {
-  @apply text-2xl text-(--main-text-color) font-extrabold;
+  @apply text-h1 text-(--main-text-color) font-extrabold;
 }
 
 .dao-address {
-  @apply text-base text-(--gray-text-color) font-normal;
+  @apply text-1 text-(--gray-text-color) font-normal;
 }
 
 .proposals-actions {

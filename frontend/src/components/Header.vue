@@ -6,20 +6,15 @@
       </div>
 
       <nav class="header-item nav-menu">
-        <a href="/" class="nav-menu__item active">Home</a>
-        <a href="https://docs.supadupa.space" target="_blank" class="nav-menu__item">Docs</a>
+        <a href="/" class="nav-menu__item button link">Home</a>
+        <a href="https://docs.supadupa.space" target="_blank" class="nav-menu__item button link disabled">Docs</a>
       </nav>
 
       <div class="header-item nav-actions">
         <a href="https://github.com/supadupadao" target="_blank"><i class="fa-brands fa-github fa-2x"></i></a>
-        <div class="language-switcher">
+        <div class="button language">
           <i class="fa-solid fa-chevron-down"></i>
-          EN
-        </div>
-        <div v-if="!wallet?.state.connected" @click="wallet?.openModal">
-          <button type="button" class="button small orange">
-            Connect wallet
-          </button>
+          Language
         </div>
         <div v-if="wallet?.state.connected" @click="wallet?.disconnect">{{ userFriendlyAddress }}</div>
       </div>
