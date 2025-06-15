@@ -8,26 +8,65 @@
   --spacing: 8px;
   --tw-space-x-reverse: 8px;
 
-  --text-sm: 16px;
-  --text-base: 18px;
-  --text-lg: 20px;
-  --text-xl: 22px;
-  --text-2xl: 24px;
-  --text-3xl: 32px;
-
   --website-width: 1136px;
-
-  --main-text-color: #000000;
-  --gray-text-color: #828282;
-  --white-text-color: #FFFFFF;
-
-  --header-bg-color: #FCFCFC;
-  --footer-bg-color: #FCFCFC;
 
   font-family: "Manrope", sans-serif;
   font-optical-sizing: auto;
-  font-weight: normal;
-  font-style: normal;
+}
+
+@theme {
+  --color-white: #FFFFFF;
+  --color-orange: #FF5E00;
+  --color-black-orange: #F45900;
+  --color-black: #000000;
+  --color-gray: #868686;
+  --color-light-gray: #F5F5F5;
+  --color-red: #FD6E6E;
+  --color-light-red: #FFF9F9;
+  --color-light-black: #292929;
+  --color-orange-disabled: #59F45900;
+
+  --color-bg-grey: #FCFCFC;
+
+  --text-button-1: 22px;
+  --text-button-1--line-height: 130%;
+  --text-button-1--font-weight: 800; /* extrabold */
+
+  --text-button-3: 18px;
+  --text-button-3--line-height: 140%;
+  --text-button-3--font-weight: 400; /* regulat */
+
+  --text-button-22: 22px;
+  --text-button-22--line-height: 130%;
+  --text-button-22--font-weight: 400; /* regulat */
+
+  --text-button-3-fat: 18px;
+  --text-button-3-fat--line-height: 130%;
+  --text-button-3-fat--font-weight: 800; /* extrabold */
+
+  --text-h1: 32px;
+  --text-h1--line-height: 130%;
+  --text-h1--font-weight: 800; /* extrabold */
+
+  --text-h2: 24px;
+  --text-h2--line-height: 150%;
+  --text-h2--font-weight: 800; /* extrabold */
+
+  --text-h3: 22px;
+  --text-h3--line-height: 150%;
+  --text-h3--font-weight: 800; /* extrabold */
+
+  --text-1: 22px;
+  --text-1--line-height: 130%;
+  --text-1--font-weight: 400; /* regulat */
+
+  --text-2: 22px;
+  --text-2--line-height: 130%;
+  --text-2--font-weight: 400; /* regulat */
+
+  --text-3: 18px;
+  --text-3--line-height: 130%;
+  --text-3--font-weight: 400; /* regulat */
 }
 
 .website {
@@ -39,39 +78,62 @@
 }
 
 @layer components {
-  button.button[type=button] {
-    --button-bg-color: #000000;
-    --button-text-color: #FFFFFF;
-    --button-border-raduis: 24px;
+  .button {
+    &.default {
+      --button-border-raduis: 32px;
+      @apply p-2 cursor-pointer text-button-1 bg-black text-white rounded-(--button-border-raduis);
 
-    @apply p-2 cursor-pointer text-xl bg-(--button-bg-color) text-(--button-text-color) rounded-(--button-border-raduis);
-
-    &.outline {
-      --button-text-color: #828282;
-
-      @apply bg-transparent border-1;
+      &:hover {
+        @apply bg-light-black;
+      }
     }
 
-    &.gradient {
-      --start-color: #E7FFFE;
-      --end-color: #FFBF83;
-      --button-text-color: #000000;
-
-      @apply bg-linear-to-bl from-(--start-color) to-(--end-color) border-1;
+    &.language {
+      --button-border-raduis: 32px;
+      @apply py-1 px-2 cursor-pointer text-button-3 bg-white text-black rounded-(--button-border-raduis) border-1 border-black;
     }
 
-    &.small {
-      @apply p-1 text-sm;
+    &.max {
+      --button-border-raduis: 24px;
+      @apply p-1 cursor-pointer text-button-3 bg-white text-black rounded-(--button-border-raduis) border-1 border-black;
+
+      &.disabled {
+        @apply text-gray bg-bg-grey border-gray cursor-not-allowed border-1;
+      }
+
+      &:active {
+        @apply text-button-3-fat;
+      }
     }
 
-    &.orange {
-      --button-bg-color: #F27F3D;
-      --button-text-color: #FFFFFF;
+    &.primary {
+      --button-border-raduis: 32px;
+      @apply py-1 px-2 cursor-pointer text-button-1 bg-orange text-white rounded-(--button-border-raduis) border-none;
+
+      &:hover {
+        @apply bg-black-orange;
+      }
+
+      &.disable {
+        @apply bg-orange-disabled cursor-not-allowed;
+      }
+    }
+
+    &.link {
+      @apply cursor-pointer text-button-22;
+
+      &.disabled {
+        @apply text-gray cursor-not-allowed;
+      }
     }
   }
 
   h1 {
-    @apply text-3xl font-extrabold pb-2;
+    @apply text-h1;
+  }
+
+  h2 {
+    @apply text-h2;
   }
 
   .block {
@@ -83,20 +145,15 @@
   }
 
   table.table {
-    --table-border-radius: 24px;
-    --table-header-bg-color: #000000;
-    --table-header-text-color: #FFFFFF;
-    --table-row-bg-color: #FCFCFC;
-    --table-row-text-color: #000000;
-    --table-row-separator-color: #EDEDED;
+    --table-border-radius: 32px;
 
-    @apply size-full text-xl;
+    @apply size-full;
 
     thead {
-      @apply bg-(--table-header-bg-color) text-(--table-header-text-color);
+      @apply bg-black text-white text-h3;
 
       th {
-        @apply p-4 text-left;
+        @apply p-1 text-center;
 
         &:first-child {
           @apply rounded-l-(--table-border-radius);
@@ -109,18 +166,18 @@
     }
 
     tbody {
-      @apply bg-(--table-row-bg-color) text-(--table-row-text-color);
+      @apply bg-bg-grey text-black text-button-3;
 
       tr {
         &:not(&:last-child) {
-          @apply border-b-1 border-b-(--table-row-separator-color);
+          @apply border-b-1 border-b-light-gray;
         }
 
         td {
-          @apply p-4 text-left;
+          @apply p-1 text-center;
 
           &:first-child {
-            @apply mt-4;
+            @apply mt-1;
           }
         }
 

@@ -4,23 +4,22 @@
   </div>
 
   <div class="block">
-    <h1>Proposals</h1>
+    <h2>Proposals</h2>
 
     <div class="proposals-actions">
       <div>
-        <button type="button" class="button">All proposals</button>
-        <button type="button" class="button outline">Open</button>
-        <button type="button" class="button outline">Closed</button>
+        <button type="button" class="button max">Active</button>
+        <button type="button" class="button max disabled">Closed</button>
       </div>
       <div>
-        <button type="button" class="button gradient">New proposal</button>
+        <button type="button" class="button primary">New proposal</button>
       </div>
     </div>
 
     <table class="table">
       <thead>
         <tr>
-          <th>№</th>
+          <th>#</th>
           <th>Title</th>
           <th>Status</th>
           <th>Votes</th>

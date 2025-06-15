@@ -1,6 +1,6 @@
 @layer components {
   .header {
-    @apply bg-(--header-bg-color) py-5;
+    @apply bg-bg-grey py-5;
 
     .inner {
       @apply max-w-(--website-width) mx-auto size-full;
@@ -19,20 +19,12 @@
       @apply text-center space-x-4;
 
       .nav-menu__item {
-        @apply text-center text-xl text-(--gray-text-color);
-
-        &.active {
-          @apply text-(--main-text-color);
-        }
+        @apply text-center;
       }
     }
 
     .nav-actions {
       @apply flex justify-end space-x-4;
-
-      .language-switcher {
-        @apply bg-black text-white py-1 px-2 rounded-full;
-      }
     }
   }
 }

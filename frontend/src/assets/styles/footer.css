@@ -1,6 +1,6 @@
 @layer components {
   .footer {
-    @apply bg-(--footer-bg-color) py-4;
+    @apply bg-bg-grey py-4;
 
     .inner {
       @apply max-w-(--website-width) mx-auto size-full;
