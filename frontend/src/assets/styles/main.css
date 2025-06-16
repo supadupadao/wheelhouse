@@ -128,6 +128,13 @@
     }
   }
 
+  .input {
+    &.default {
+      --button-border-raduis: 32px;
+      @apply p-2 text-button-3 bg-white text-black rounded-(--button-border-raduis) border-1 border-black;
+    }
+  }
+
   h1 {
     @apply text-h1;
   }
@@ -142,6 +149,12 @@
     * {
       @apply my-1;
     }
+  }
+
+  .box {
+    --table-border-radius: 32px;
+
+    @apply p-2 bg-bg-grey rounded-(--table-border-radius);
   }
 
   table.table {
@@ -171,6 +184,10 @@
       tr {
         &:not(&:last-child) {
           @apply border-b-1 border-b-light-gray;
+        }
+
+        &:hover {
+          @apply bg-light-gray;
         }
 
         td {
