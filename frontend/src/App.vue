@@ -15,10 +15,11 @@ import type { TonConnectUI } from '@tonconnect/ui';
 import { RouterView, type Router } from 'vue-router';
 import Header from './components/Header.vue';
 import Footer from './components/Footer.vue';
+import type { Wallet } from './wallet';
 
 declare module 'vue' {
   interface ComponentCustomProperties {
-    $tonConnectUI: TonConnectUI;
+    wallet: Wallet;
     $router: Router;
   }
 }

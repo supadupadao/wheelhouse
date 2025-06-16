@@ -16,13 +16,14 @@
           <i class="fa-solid fa-chevron-down"></i>
           Language
         </div>
+        <div v-if="!wallet?.state.connected" @click="wallet?.openModal" class="button max">Connect</div>
         <div v-if="wallet?.state.connected" @click="wallet?.disconnect">{{ userFriendlyAddress }}</div>
       </div>
     </div>
   </header>
 </template>
 
-<script>
+<script lang="ts">
 import { cropTonAddress } from '@/utils';
 
 export default {
@@ -30,7 +31,7 @@ export default {
   computed: {
     userFriendlyAddress() {
       if (this.wallet.state.connected) {
-        return cropTonAddress(this.wallet.state.address);
+        return cropTonAddress(this.wallet.state.address!);
       } else {
         return `Wallet`
       }

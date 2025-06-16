@@ -8,8 +8,7 @@ export interface State {
 };
 
 export class Wallet {
-  private tonConnectUI: TonConnectUI;
-
+  public tonConnectUI: TonConnectUI;
   public state: State;
 
   constructor(tonConnectUI: TonConnectUI) {
