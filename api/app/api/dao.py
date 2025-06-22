@@ -10,6 +10,7 @@ router = APIRouter(prefix="/dao")
 
 class DAOItem(BaseModel):
     address: APIAddress
+    jetton_master: APIAddress
 
 
 class DAOList(BaseModel):
@@ -31,7 +32,8 @@ async def list_dao(conn: Database = Depends(get_db)) -> DAOList:
     return DAOList(
         dao=[
             DAOItem(
-                address=APIAddress.from_address(dao.address)
+                address=APIAddress.from_address(dao.address),
+                jetton_master=APIAddress.from_address(dao.jetton_master),
             ) for dao in dao_list
         ]
     )
