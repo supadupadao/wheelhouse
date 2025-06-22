@@ -25,7 +25,7 @@ class MinterTracker(BaseTracker):
 
     async def run(self) -> None:
         last_trace = await get_last_trace(self.ctx.db, self.minter_address)
-        logger.debug("Last trace for minter is %s", last_trace)
+        logger.debug("Last trace for minter is %s", last_trace.hash)
         try:
             traces = await list_new_traces(self.ctx.tonapi_client, last_trace, self.minter_address)
         except Exception as err:

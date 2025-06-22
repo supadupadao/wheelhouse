@@ -1,12 +1,12 @@
 import logging
 from dataclasses import dataclass
 from decimal import Decimal
-from email.headerregistry import Address
 from typing import Optional
 
 from pytonapi import AsyncTonapi
 from pytonapi.schema.traces import Trace
 from tonsdk.boc import Cell, Slice
+from tonsdk.utils import Address
 
 from indexer.app.infra.ton import limiter
 from indexer.app.infra.ton.parsers import traverse_children, BaseState, S
@@ -56,35 +56,35 @@ async def find_skipper(state: S, trace: Trace) -> Optional[S]:
         raise IndexerDataIsNotReady("Skipper transaction is not executed yet")
 
     account_address = trace.transaction.account.address.to_raw()
-    if account_address == state.skipper_address:
+    if account_address == state.skipper_address.to_string(is_user_friendly=False):
         msg_body = trace.transaction.in_msg.raw_body
-        cell: Cell = Cell.one_from_boc(msg_body)
-        s: Slice = cell.begin_parse()
-        opcode = s.read_uint(32)
-        if opcode == 0x690102:
-            # TODO FIXME
-            owner = s.read_msg_addr()
-            if s.read_bit():
-                lock_period = s.read_uint(64)
-            voter_unlock_date = s.read_uint(64)
-            amount = s.read_coins()
-            # TODO FIXME
+        if msg_body is not None:
+            cell: Cell = Cell.one_from_boc(msg_body)
+            s: Slice = cell.begin_parse()
+            opcode = s.read_uint(32)
+            if opcode == 0x690102:
+                # TODO FIXME
+                owner = s.read_msg_addr()
+                if s.read_bit():
+                    lock_period = s.read_uint(64)
+                voter_unlock_date = s.read_uint(64)
+                amount = s.read_coins()
+                # TODO FIXME
 
-            payload = s.read_ref()
-            payload_parser = payload.begin_parse()
-            proxy_opcode = payload_parser.read_uint(32)
+                payload = s.read_ref()
+                payload_parser = payload.begin_parse()
+                proxy_opcode = payload_parser.read_uint(32)
 
-            if proxy_opcode == 0x690401:
-                return await traverse_children(
-                    state, trace.children, handle_new_proposal
-                )
-            if proxy_opcode == 0x690402:
-                return await traverse_children(
-                    state, trace.children, handle_vote_proposal
-                )
+                if proxy_opcode == 0x690401:
+                    return await traverse_children(
+                        state, trace.children, handle_new_proposal
+                    )
+                if proxy_opcode == 0x690402:
+                    return await traverse_children(
+                        state, trace.children, handle_vote_proposal
+                    )
 
     if trace.children is not None:
-        logger.info("Parsing children")
         return await traverse_children(state, trace.children, find_skipper)
     return None
 

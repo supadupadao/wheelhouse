@@ -54,11 +54,11 @@ class SkipperTracker(BaseTracker):
                     break
 
     async def _track_dao(self, dao: DAO):
-        logger.debug("Indexing dao %s", dao.address)
+        logger.debug("Indexing dao %s", dao.address.to_string())
 
         while True:
             last_trace = await get_last_trace(self.ctx.db, dao.address)
-            logger.debug("Last trace for dao %s is %s", dao.address, last_trace)
+            logger.debug("Last trace for dao %s is %s", dao.address.to_string(), last_trace.hash)
             try:
                 traces = await list_new_traces(self.ctx.tonapi_client, last_trace, dao.address)
             except Exception as err:

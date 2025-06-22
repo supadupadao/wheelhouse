@@ -35,7 +35,7 @@ async def list_dao(conn: Database) -> list[DAO]:
 async def insert_proposal(conn: Database, proposal: Proposal):
     await conn.execute(
         """
-        INSERT INTO proposals (
+        INSERT INTO proposal (
             address,
             dao,
             id,
@@ -43,7 +43,7 @@ async def insert_proposal(conn: Database, proposal: Proposal):
             is_executed,
             votes_yes,
             votes_no,
-            expires_at,
+            expires_at
         ) VALUES (
             $1,
             $2,
@@ -52,17 +52,25 @@ async def insert_proposal(conn: Database, proposal: Proposal):
             $5,
             $6,
             $7,
-            $8,
+            $8
         ) ON CONFLICT (address)
-        DO UPDATE
+        DO UPDATE SET
             dao=$2,
             id=$3,
             is_initialized=$4,
             is_executed=$5,
             votes_yes=$6,
             votes_no=$7,
-            expires_at=$8,
-        """
+            expires_at=$8
+        """,
+        address_into_db_format(proposal.address),
+        address_into_db_format(proposal.dao),
+        proposal.id,
+        proposal.is_initialized,
+        proposal.is_executed,
+        proposal.votes_yes,
+        proposal.votes_no,
+        proposal.expires_at
     )
 
 
