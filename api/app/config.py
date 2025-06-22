@@ -1,5 +1,3 @@
-from typing import Optional
-
 from pydantic_settings import BaseSettings, SettingsConfigDict, SettingsError
 
 from libs.error import IndexerSettingsError
@@ -11,7 +9,6 @@ class Settings(BaseSettings):
     is_testnet: bool = True
     log_level: str = "INFO"
     db_url: str = "postgresql://postgres:password@localhost:5432/skipper"
-    tonapi_token: Optional[str] = None
 
 
 def init_settings() -> Settings:

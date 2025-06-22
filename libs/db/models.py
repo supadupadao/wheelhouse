@@ -1,35 +1,47 @@
+from dataclasses import dataclass
 from decimal import Decimal
 
-from sqlalchemy import LargeBinary, BigInteger, Numeric
-from sqlmodel import SQLModel, Field
+from tonsdk.utils import Address
 
 
-class DAO(SQLModel, table=True):
-    address: bytes = Field(primary_key=True, sa_type=LargeBinary)
+@dataclass
+class DAO:
+    address: Address
+    jetton_master: Address
 
 
-class Wallet(SQLModel, table=True):
-    address: bytes = Field(primary_key=True, sa_type=LargeBinary)
+@dataclass
+class Wallet:
+    address: bytes
 
 
-class Proposal(SQLModel, table=True):
-    address: bytes = Field(primary_key=True, sa_type=LargeBinary)
-    dao: bytes = Field(foreign_key="dao.address", sa_type=LargeBinary)
-    id: int = Field()
-    is_initialized: bool = Field()
-    is_executed: bool = Field()
-    votes_yes: Decimal = Field(sa_type=Numeric(39, 0), nullable=False, default=0)
-    votes_no: Decimal = Field(sa_type=Numeric(39, 0), nullable=False, default=0)
-    expires_at: int = Field()
-    # payload
+@dataclass
+class JettonWallet:
+    jetton_master: bytes
+    wallet: bytes
+    balance: Decimal
 
 
-class Vote(SQLModel, table=True):
-    proposal: bytes = Field(foreign_key="proposal.address", primary_key=True, sa_type=LargeBinary)
-    wallet: bytes = Field(foreign_key="wallet.address", primary_key=True, sa_type=LargeBinary)
+@dataclass
+class Proposal:
+    address: Address
+    dao: Address
+    id: int
+    is_initialized: bool
+    is_executed: bool
+    votes_yes: Decimal
+    votes_no: Decimal
+    expires_at: int
 
 
-class TraceLog(SQLModel, table=True):
-    dao: bytes = Field(foreign_key="dao.address", sa_type=LargeBinary)
-    hash: str = Field(primary_key=True)
-    utime: int = Field(sa_type=BigInteger)
+@dataclass
+class Vote:
+    proposal: bytes
+    wallet: bytes
+
+
+@dataclass
+class TraceLog:
+    address: Address
+    hash: str
+    utime: int
