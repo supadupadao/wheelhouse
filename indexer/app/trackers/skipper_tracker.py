@@ -1,11 +1,11 @@
 import asyncio
 import logging
 
-from indexer.app.infra.db.ops import list_dao, get_last_trace, insert_trace, insert_proposal
 from indexer.app.infra.ton.api import list_new_traces, get_trace_info
 from indexer.app.infra.ton.parsers.skipper import parse_skipper_trace, NewProposalState, VoteProposalState
 from indexer.app.trackers.base import BaseTracker
 from libs.db import DAO, TraceLog, Proposal
+from libs.db.ops import list_dao, get_last_trace, insert_trace, insert_proposal
 from libs.error import TonApiError, IndexerDataIsNotReady, BaseIndexerException
 
 logger = logging.getLogger(__name__)
@@ -34,6 +34,8 @@ class SkipperTracker(BaseTracker):
                 else:
                     if isinstance(parsed_trace, NewProposalState) or isinstance(parsed_trace, VoteProposalState):
                         logger.info("Adding new proposal")
+                        print("\n\n\nVOTES\n\n\n", parsed_trace.proposal_data.votes_yes,
+                              parsed_trace.proposal_data.votes_no)
                         await insert_proposal(self.ctx.db, Proposal(
                             address=parsed_trace.address,
                             dao=dao.address,
@@ -58,7 +60,8 @@ class SkipperTracker(BaseTracker):
 
         while True:
             last_trace = await get_last_trace(self.ctx.db, dao.address)
-            logger.debug("Last trace for dao %s is %s", dao.address.to_string(), last_trace.hash)
+            logger.debug("Last trace for dao %s is %s", dao.address.to_string(),
+                         last_trace.hash if last_trace else None)
             try:
                 traces = await list_new_traces(self.ctx.tonapi_client, last_trace, dao.address)
             except Exception as err:

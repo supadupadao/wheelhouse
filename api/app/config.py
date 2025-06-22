@@ -8,6 +8,7 @@ class Settings(BaseSettings):
 
     is_testnet: bool = True
     log_level: str = "INFO"
+    db_url: str = "postgresql://postgres:password@localhost:5432/skipper"
 
 
 def init_settings() -> Settings:

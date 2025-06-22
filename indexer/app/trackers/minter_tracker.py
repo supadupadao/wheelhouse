@@ -4,11 +4,11 @@ import logging
 from tonsdk.utils import Address
 
 from indexer.app.common.ctx import Context
-from indexer.app.infra.db.ops import get_last_trace, insert_trace, insert_dao
 from indexer.app.infra.ton.api import list_new_traces, get_trace_info
 from indexer.app.infra.ton.parsers.minter import parse_minter_trace, DeployDAOState
 from indexer.app.trackers.base import BaseTracker
 from libs.db import TraceLog, DAO
+from libs.db.ops import get_last_trace, insert_trace, insert_dao
 from libs.db.utils import str_to_address
 from libs.error import TonApiError, IndexerDataIsNotReady, BaseIndexerException
 
@@ -24,8 +24,10 @@ class MinterTracker(BaseTracker):
         self.minter_address = str_to_address(ctx.cfg.skipper_minter_address)
 
     async def run(self) -> None:
+        logger.info("Run Minter Tracker")
+
         last_trace = await get_last_trace(self.ctx.db, self.minter_address)
-        logger.debug("Last trace for minter is %s", last_trace.hash)
+        logger.debug("Last trace for minter is %s", last_trace.hash if last_trace else None)
         try:
             traces = await list_new_traces(self.ctx.tonapi_client, last_trace, self.minter_address)
         except Exception as err:

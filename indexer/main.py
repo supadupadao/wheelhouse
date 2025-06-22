@@ -8,6 +8,7 @@ from indexer.app.config import init_settings
 from indexer.app.infra.ton import init_tonapi_client
 from indexer.app.logging_config import init_logging
 from indexer.app.trackers.base import BaseTracker
+from indexer.app.trackers.jetton_holder_tracker import JettonHolderTracker
 from indexer.app.trackers.minter_tracker import MinterTracker
 from indexer.app.trackers.skipper_tracker import SkipperTracker
 from libs.db import Database
@@ -34,6 +35,7 @@ async def main(context: Context):
     trackers = [
         MinterTracker(ctx),
         SkipperTracker(ctx),
+        JettonHolderTracker(ctx),
     ]
 
     await asyncio.gather(*(run_tracker_loop(t) for t in trackers))

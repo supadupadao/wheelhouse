@@ -74,6 +74,25 @@ async def insert_proposal(conn: Database, proposal: Proposal):
     )
 
 
+async def list_proposals(conn: Database, dao: Address) -> list[Proposal]:
+    rows = await conn.fetch_all(
+        """
+        SELECT * FROM proposal WHERE dao = $1
+        """,
+        address_into_db_format(dao)
+    )
+    return [Proposal(
+        address=address_from_db_format(r.get("address")),
+        dao=address_from_db_format(r.get("dao")),
+        id=r.get("id"),
+        is_initialized=r.get("is_initialized"),
+        is_executed=r.get("is_executed"),
+        votes_yes=r.get("votes_yes"),
+        votes_no=r.get("votes_no"),
+        expires_at=r.get("expires_at"),
+    ) for r in rows]
+
+
 # TraceLog
 
 
