@@ -1,19 +1,18 @@
 import logging
 from dataclasses import dataclass
-from typing import Optional, Callable, Awaitable
+from decimal import Decimal
+from email.headerregistry import Address
+from typing import Optional
 
 from pytonapi import AsyncTonapi
 from pytonapi.schema.traces import Trace
 from tonsdk.boc import Cell, Slice
 
-from indexer.app.ton import limiter
+from indexer.app.infra.ton import limiter
+from indexer.app.infra.ton.parsers import traverse_children, BaseState, S
 from libs.error import TonApiError, IndexerDataIsNotReady
 
-
-@dataclass
-class BaseState:
-    skipper_address: str
-    tonapi_client: AsyncTonapi
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -21,36 +20,38 @@ class ProposalData:
     proposal_id: int
     is_initialized: bool
     is_executed: bool
-    votes_yes: int
-    votes_no: int
+    votes_yes: Decimal
+    votes_no: Decimal
     expires_at: int
 
 
+@dataclass()
+class SkipperState(BaseState):
+    skipper_address: Address
+
+
 @dataclass
-class NewProposalState(BaseState):
-    address: str
+class NewProposalState(SkipperState):
+    address: Address
     proposal_data: ProposalData
 
 
 @dataclass
-class VoteProposalState(BaseState):
+class VoteProposalState(SkipperState):
     # TODO FIXME: add votes_yes and votes_no fields
-    address: str
+    address: Address
     proposal_data: ProposalData
 
 
-HandlerFunc = Callable[[BaseState, Trace], Awaitable[Optional[BaseState]]]
-
-
-async def parse_trace(
-    raw_skipper_address: str, tonapi_client: AsyncTonapi, trace_info: Trace
+async def parse_skipper_trace(
+        skipper_address: Address, tonapi_client: AsyncTonapi, trace_info: Trace
 ):
-    state = BaseState(skipper_address=raw_skipper_address, tonapi_client=tonapi_client)
+    state = SkipperState(skipper_address=skipper_address, tonapi_client=tonapi_client)
 
     return await traverse_children(state, trace_info.children or [], find_skipper)
 
 
-async def find_skipper(state: BaseState, trace: Trace) -> Optional[BaseState]:
+async def find_skipper(state: S, trace: Trace) -> Optional[S]:
     if len(trace.transaction.out_msgs) > 0:
         raise IndexerDataIsNotReady("Skipper transaction is not executed yet")
 
@@ -83,13 +84,13 @@ async def find_skipper(state: BaseState, trace: Trace) -> Optional[BaseState]:
                 )
 
     if trace.children is not None:
-        logging.info("Parsing children")
+        logger.info("Parsing children")
         return await traverse_children(state, trace.children, find_skipper)
     return None
 
 
 async def fetch_proposal_state(
-    state: BaseState, proposal_contract: str
+        state: S, proposal_contract: str
 ) -> ProposalData:
     async with limiter:
         result = await state.tonapi_client.blockchain.execute_get_method(
@@ -107,15 +108,15 @@ async def fetch_proposal_state(
             proposal_id=proposal_id,
             is_initialized=is_initialized,
             is_executed=is_executed,
-            votes_yes=votes_yes,
-            votes_no=votes_no,
+            votes_yes=Decimal(votes_yes),
+            votes_no=Decimal(votes_no),
             expires_at=expires_at,
         )
     else:
         raise TonApiError("Error fetching proposal state")
 
 
-async def handle_new_proposal(state: BaseState, trace: Trace) -> Optional[BaseState]:
+async def handle_new_proposal(state: S, trace: Trace) -> Optional[S]:
     if len(trace.transaction.out_msgs) > 0:
         raise IndexerDataIsNotReady("Skipper transaction is not executed yet")
 
@@ -126,13 +127,13 @@ async def handle_new_proposal(state: BaseState, trace: Trace) -> Optional[BaseSt
         return NewProposalState(
             skipper_address=state.skipper_address,
             tonapi_client=state.tonapi_client,
-            address=proposal_contract,
+            address=Address(proposal_contract),
             proposal_data=proposal_data,
         )
     return await traverse_children(state, trace.children, handle_new_proposal)
 
 
-async def handle_vote_proposal(state: BaseState, trace: Trace) -> Optional[BaseState]:
+async def handle_vote_proposal(state: S, trace: Trace) -> Optional[S]:
     if len(trace.transaction.out_msgs) > 0:
         raise IndexerDataIsNotReady("Skipper transaction is not executed yet")
 
@@ -143,29 +144,7 @@ async def handle_vote_proposal(state: BaseState, trace: Trace) -> Optional[BaseS
         return VoteProposalState(
             skipper_address=state.skipper_address,
             tonapi_client=state.tonapi_client,
-            address=proposal_contract,
+            address=Address(proposal_contract),
             proposal_data=proposal_data,
         )
     return await traverse_children(state, trace.children, handle_vote_proposal)
-
-
-async def check_children_success(state: BaseState, trace: Trace) -> Optional[BaseState]:
-    if len(trace.transaction.out_msgs) > 0:
-        raise IndexerDataIsNotReady("Skipper transaction is not executed yet")
-    if not trace.transaction.success:
-        return None
-    await traverse_children(state, trace.children, check_children_success)
-
-    return state
-
-
-async def traverse_children(
-    state: BaseState, children: list[Trace], func: HandlerFunc
-) -> Optional[BaseState]:
-    if not children:
-        return None
-    for child in children:
-        new_state = await func(state, child)
-        if new_state is not None:
-            return new_state
-    return None

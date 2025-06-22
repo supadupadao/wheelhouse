@@ -4,10 +4,10 @@ from logging.config import dictConfig
 def init_logging(log_level: str = "INFO"):
     dictConfig({
         "version": 1,
-        "disable_existing_loggers": False,
+        "disable_existing_loggers": True,
         "formatters": {
             "default": {
-                "format": "%(asctime)s | %(levelname)s | %(name)s | %(message)s",
+                "format": "%(asctime)s [%(levelname)s] [%(name)s] %(message)s",
             },
         },
         "handlers": {
@@ -17,7 +17,14 @@ def init_logging(log_level: str = "INFO"):
             },
         },
         "root": {
-            "level": log_level,
+            "level": "WARNING",
             "handlers": ["console"],
+        },
+        "loggers": {
+            "indexer": {
+                "level": log_level,
+                "handlers": ["console"],
+                "propagate": False,
+            },
         },
     })

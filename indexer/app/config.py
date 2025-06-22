@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     is_testnet: bool = True
     log_level: str = "INFO"
     db_url: str = "postgresql://postgres:password@localhost:5432/skipper"
-    skipper_address: str = "EQ..."
+    skipper_minter_address: str = "EQ..."
     tonapi_token: Optional[str] = None
 
 
