@@ -12,6 +12,11 @@ logger = logging.getLogger(__name__)
 
 
 class SkipperTracker(BaseTracker):
+    RETRY_DELAY = 10
+
+    @property
+    def name(self) -> str:
+        return "skipper"
 
     async def _track_trace(self, dao: DAO, trace_id: str):
         async with self.ctx.db.transaction():
@@ -34,8 +39,6 @@ class SkipperTracker(BaseTracker):
                 else:
                     if isinstance(parsed_trace, NewProposalState) or isinstance(parsed_trace, VoteProposalState):
                         logger.info("Adding new proposal")
-                        print("\n\n\nVOTES\n\n\n", parsed_trace.proposal_data.votes_yes,
-                              parsed_trace.proposal_data.votes_no)
                         await insert_proposal(self.ctx.db, Proposal(
                             address=parsed_trace.address,
                             dao=dao.address,

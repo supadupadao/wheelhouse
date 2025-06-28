@@ -1,13 +1,14 @@
 from typing import Optional
 
 from pytonapi import AsyncTonapi
+from pytonapi.schema.jettons import JettonHolder
 from pytonapi.schema.traces import Trace
 from tonsdk.utils import Address
 
 from indexer.app.infra.ton import limiter
 from libs.db import TraceLog
 
-MAX_TRACES_PER_PAGE: int = 100
+MAX_PER_PAGE: int = 100
 
 
 async def list_new_traces(
@@ -22,7 +23,7 @@ async def list_new_traces(
         async with limiter:
             result = await tonapi_client.accounts.get_traces(
                 address.to_string(),
-                limit=MAX_TRACES_PER_PAGE,
+                limit=MAX_PER_PAGE,
                 before_lt=before_lt
             )
         if not len(result.traces):
@@ -40,3 +41,16 @@ async def list_new_traces(
 async def get_trace_info(tonapi_client: AsyncTonapi, trace_id: str) -> Trace:
     async with limiter:
         return await tonapi_client.traces.get_trace(trace_id)
+
+
+async def list_jetton_holders(tonapi_client: AsyncTonapi, jetton_master: Address) -> list[JettonHolder]:
+    result = []
+    offset = 0
+    while True:
+        async with limiter:
+            holders = await tonapi_client.jettons.get_holders(jetton_master.to_string(), MAX_PER_PAGE, offset)
+        if len(holders.addresses) == 0:
+            break
+        result.extend(holders.addresses)
+        offset += MAX_PER_PAGE
+    return result

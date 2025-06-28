@@ -16,8 +16,12 @@ logger = logging.getLogger(__name__)
 
 
 class MinterTracker(BaseTracker):
-    RETRY_DELAY = 60
+    RETRY_DELAY = 120
     minter_address: Address
+
+    @property
+    def name(self) -> str:
+        return "minter"
 
     def __init__(self, ctx: Context):
         super().__init__(ctx)

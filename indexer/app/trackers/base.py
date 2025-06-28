@@ -10,6 +10,11 @@ class BaseTracker(ABC):
     def __init__(self, ctx: Context):
         self.ctx = ctx
 
+    @property
+    @abstractmethod
+    def name(self) -> str:
+        return ""
+
     @abstractmethod
     async def run(self) -> None:
         pass
