@@ -26,8 +26,9 @@ class Wallet:
 
 @dataclass
 class JettonWallet:
-    jetton_master: Address
     address: Address
+    owner: Address
+    jetton_master: Address
     balance: Decimal
 
 

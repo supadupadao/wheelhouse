@@ -66,7 +66,7 @@
 </template>
 
 <script lang="ts">
-import { fetchJettonMaster, fetchLockAddress, fetchProposalsList, fetchWalletAddress, type ProposalData } from '@/api';
+import { fetchDaoItem, fetchProposalsList, fetchWalletInfo, type ProposalData } from '@/api';
 import { cropTonAddress } from '@/utils';
 import { Address, beginCell, Cell, toNano } from '@ton/core';
 import { CHAIN } from '@tonconnect/ui';
@@ -82,7 +82,9 @@ export default {
 
       myAddress: null as Address | null,
       lockAddress: null as Address | null,
+      lockBalance: 0n,
       jettonWalletAddress: null as Address | null,
+      jettonBalance: 0n,
       jettonMaster: null as Address | null,
     }
   },
@@ -106,20 +108,16 @@ export default {
 
         console.log("Connected to wallet", myAddress.toString());
 
-        const [jettonWalletResponse, lockAddressResponse, jettonMasterResponse] = await Promise.all([
-          fetchWalletAddress(this.daoAddress.toString(), myAddress.toString()),
-          fetchLockAddress(this.daoAddress.toString(), myAddress.toString()),
-          fetchJettonMaster(this.daoAddress.toString())
+        const [walletInfo, daoItem] = await Promise.all([
+          fetchWalletInfo(this.daoAddress.toRawString(), myAddress.toRawString()),
+          fetchDaoItem(this.daoAddress.toRawString()),
         ]);
 
-        console.log("Jetton wallet response", jettonWalletResponse);
-        this.jettonWalletAddress = Address.parse(jettonWalletResponse.address.raw);
-
-        console.log("Lock address response", lockAddressResponse);
-        this.lockAddress = Address.parse(lockAddressResponse.address.raw);
-
-        console.log("Jetton master response", jettonMasterResponse);
-        this.jettonMaster = Address.parse(jettonMasterResponse.address.raw);
+        this.jettonWalletAddress = walletInfo.jetton_wallet ? Address.parse(walletInfo.jetton_wallet.address.raw) : null;
+        this.lockAddress = walletInfo.lock ? Address.parse(walletInfo.lock.address.raw) : null;
+        this.lockBalance = walletInfo.lock ? BigInt(walletInfo.lock.balance) : 0n;
+        this.jettonMaster = Address.parse(daoItem.jetton_master.raw);
+        this.jettonBalance = walletInfo.jetton_wallet ? BigInt(walletInfo.jetton_wallet.balance) : 0n;
 
         this.loading = false;
       }
@@ -134,7 +132,7 @@ export default {
         .storeAddress(this.lockAddress)
         .storeAddress(this.lockAddress)
         .storeMaybeRef(null)
-        .storeCoins(toNano("0.01"))
+        .storeCoins(1)
         .endCell();
 
       const codeCell = Cell.fromBase64(lockContract.code);

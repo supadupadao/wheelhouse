@@ -64,8 +64,9 @@ class JettonHolderTracker(BaseTracker):
                     await insert_jetton_wallet(
                         self.ctx.db,
                         JettonWallet(
-                            jetton_master=dao.jetton_master,
                             address=jetton_wallet,
+                            owner=owner,
+                            jetton_master=dao.jetton_master,
                             balance=Decimal(wallet.balance)
                         )
                     )

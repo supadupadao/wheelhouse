@@ -11,12 +11,12 @@
 </template>
 
 <script lang="ts">
-import { fetchDaoList, type DaoData } from '@/api';
+import { fetchDaoList, type DaoItem } from '@/api';
 
 export default {
   data() {
     return {
-      daos: [] as DaoData[],
+      daos: [] as DaoItem[],
     }
   },
   async created() {

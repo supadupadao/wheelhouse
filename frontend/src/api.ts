@@ -21,12 +21,13 @@ export async function fetchProposalsList(dao: string): Promise<ProposalsResponse
   return await result.json() as ProposalsResponse;
 }
 
-export interface DaoData {
+export interface DaoItem {
   address: APIAddress;
+  jetton_master: APIAddress;
 }
 
 export interface DaoListResponse {
-  dao: DaoData[]
+  dao: DaoItem[]
 }
 
 export async function fetchDaoList(): Promise<DaoListResponse> {
@@ -34,32 +35,24 @@ export async function fetchDaoList(): Promise<DaoListResponse> {
   return await result.json() as DaoListResponse;
 }
 
-export interface getWalletAddressResponse {
+export async function fetchDaoItem(dao: string): Promise<DaoItem> {
+  const result = await fetch(`/api/dao/${dao}`);
+  return await result.json() as DaoItem;
+}
+
+export interface WalletState {
   address: APIAddress;
+  balance: number;
 }
 
-export async function fetchWalletAddress(dao: string, owner: string): Promise<getWalletAddressResponse> {
-  const params = new URLSearchParams({ dao, owner });
-  const result = await fetch("/api/getters/get_wallet_address?" + params.toString());
-  return await result.json() as getWalletAddressResponse;
-}
-
-export interface getLockAddressResponse {
+export interface getWalletInfoResponse {
   address: APIAddress;
+  jetton_wallet: WalletState | null;
+  lock: WalletState | null;
 }
 
-export async function fetchLockAddress(dao: string, owner: string): Promise<getLockAddressResponse> {
-  const params = new URLSearchParams({ dao, owner });
-  const result = await fetch("/api/getters/get_lock_address?" + params.toString());
-  return await result.json() as getLockAddressResponse;
-}
-
-export interface getJettonMasterResponse {
-  address: APIAddress;
-}
-
-export async function fetchJettonMaster(dao: string): Promise<getJettonMasterResponse> {
+export async function fetchWalletInfo(dao: string, owner: string): Promise<getWalletInfoResponse> {
   const params = new URLSearchParams({ dao });
-  const result = await fetch("/api/getters/get_jetton_master?" + params.toString());
-  return await result.json() as getJettonMasterResponse;
+  const result = await fetch(`/api/wallets/${owner}?` + params.toString());
+  return await result.json() as getWalletInfoResponse;
 }

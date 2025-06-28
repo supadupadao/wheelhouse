@@ -23,8 +23,9 @@ CREATE TABLE IF NOT EXISTS proposal (
 );
 
 CREATE TABLE IF NOT EXISTS jetton_wallet (
-    jetton_master BYTEA NOT NULL REFERENCES dao(jetton_master),
     address BYTEA NOT NULL,
+    jetton_master BYTEA NOT NULL REFERENCES dao(jetton_master),
+    owner BYTEA NOT NULL,
     balance NUMERIC(39, 0) NOT NULL DEFAULT 0,
     PRIMARY KEY (jetton_master, address)
 );
