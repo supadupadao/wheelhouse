@@ -1,10 +1,14 @@
-CREATE TABLE IF NOT EXISTS wallet (
-    address BYTEA PRIMARY KEY
-);
-
 CREATE TABLE IF NOT EXISTS dao (
     address BYTEA PRIMARY KEY,
-    jetton_master BYTEA UNIQUE
+    jetton_master BYTEA NOT NULL UNIQUE
+);
+
+CREATE TABLE IF NOT EXISTS dao_participant (
+	dao BYTEA NOT NULL REFERENCES dao(address),
+    address BYTEA NOT NULL,
+    jetton_wallet BYTEA NOT NULL,
+    lock_address BYTEA,
+    PRIMARY KEY (dao, address)
 );
 
 CREATE TABLE IF NOT EXISTS proposal (
@@ -18,17 +22,11 @@ CREATE TABLE IF NOT EXISTS proposal (
     expires_at BIGINT NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS vote (
-    proposal BYTEA NOT NULL REFERENCES proposal(address),
-    wallet BYTEA NOT NULL REFERENCES wallet(address),
-    PRIMARY KEY (proposal, wallet)
-);
-
 CREATE TABLE IF NOT EXISTS jetton_wallet (
     jetton_master BYTEA NOT NULL REFERENCES dao(jetton_master),
-    wallet BYTEA NOT NULL REFERENCES wallet(address),
+    address BYTEA NOT NULL,
     balance NUMERIC(39, 0) NOT NULL DEFAULT 0,
-    PRIMARY KEY (jetton_master, wallet)
+    PRIMARY KEY (jetton_master, address)
 );
 
 CREATE TABLE IF NOT EXISTS trace_log (

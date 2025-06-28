@@ -3,13 +3,14 @@ from typing import Optional
 from tonsdk.utils import Address
 
 from libs.db import DAO, Database, TraceLog, address_into_db_format, Proposal
+from libs.db.models import JettonWallet, DAOParticipant
 from libs.db.utils import address_from_db_format
 
 
 # DAO
 
 
-async def insert_dao(conn: Database, dao: DAO):
+async def insert_dao(conn: Database, dao: DAO) -> None:
     await conn.execute(
         """
         INSERT INTO dao (address, jetton_master) VALUES ($1, $2)
@@ -30,9 +31,46 @@ async def list_dao(conn: Database) -> list[DAO]:
     ) for r in rows]
 
 
+# DAO participant
+
+
+async def insert_dao_participant(conn: Database, participant: DAOParticipant) -> None:
+    await conn.execute(
+        """
+        INSERT INTO dao_participant(dao, address, jetton_wallet, lock_address)
+        VALUES ($1, $2, $3, $4)
+        ON CONFLICT (dao, address)
+        DO UPDATE SET jetton_wallet=$3, lock_address=$4
+        """,
+        address_into_db_format(participant.dao),
+        address_into_db_format(participant.address),
+        address_into_db_format(participant.jetton_wallet),
+        address_into_db_format(participant.lock_address) if participant.lock_address else None
+    )
+
+
+async def get_dao_participant(conn: Database, dao: Address, address: Address) -> Optional[DAOParticipant]:
+    row = await conn.fetch_one(
+        """
+        SELECT * FROM dao_participant WHERE dao=$1 AND address=$2
+        """,
+        address_into_db_format(dao),
+        address_into_db_format(address)
+    )
+    if row is not None:
+        lock_address = row.get("lock_address")
+        return DAOParticipant(
+            dao=address_from_db_format(row.get("dao")),
+            address=address_from_db_format(row.get("address")),
+            jetton_wallet=address_from_db_format(row.get("jetton_wallet")),
+            lock_address=address_from_db_format(lock_address) if lock_address else None
+        )
+    return None
+
+
 # Proposal
 
-async def insert_proposal(conn: Database, proposal: Proposal):
+async def insert_proposal(conn: Database, proposal: Proposal) -> None:
     await conn.execute(
         """
         INSERT INTO proposal (
@@ -116,4 +154,36 @@ async def get_last_trace(conn: Database, address: Address) -> Optional[TraceLog]
     )
     if row is not None:
         return TraceLog(**row)
+    return None
+
+
+# Jetton Wallet
+
+async def insert_jetton_wallet(conn: Database, jetton_wallet: JettonWallet):
+    await conn.execute(
+        """
+        INSERT INTO jetton_wallet (jetton_master, address, balance) VALUES ($1, $2, $3)
+        ON CONFLICT (jetton_master, address)
+        DO UPDATE SET
+            balance = $3
+        """,
+        address_into_db_format(jetton_wallet.jetton_master),
+        address_into_db_format(jetton_wallet.address),
+        jetton_wallet.balance,
+    )
+
+
+async def get_jetton_wallet(conn: Database, address: Address) -> Optional[JettonWallet]:
+    row = await conn.fetch_one(
+        """
+        SELECT * FROM jetton_wallet WHERE address=$1
+        """,
+        address_into_db_format(address)
+    )
+    if row is not None:
+        return JettonWallet(
+            address=address_from_db_format(row.get("address")),
+            jetton_master=address_from_db_format(row.get("jetton_master")),
+            balance=row.get("balance")
+        )
     return None

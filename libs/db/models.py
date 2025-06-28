@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from decimal import Decimal
+from typing import Optional
 
 from tonsdk.utils import Address
 
@@ -11,14 +12,22 @@ class DAO:
 
 
 @dataclass
+class DAOParticipant:
+    dao: Address
+    address: Address
+    jetton_wallet: Address
+    lock_address: Optional[Address]
+
+
+@dataclass
 class Wallet:
     address: bytes
 
 
 @dataclass
 class JettonWallet:
-    jetton_master: bytes
-    wallet: bytes
+    jetton_master: Address
+    address: Address
     balance: Decimal
 
 

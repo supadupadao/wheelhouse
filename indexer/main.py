@@ -15,14 +15,14 @@ from libs.db import Database
 from libs.db.migrations import run_migrations
 from libs.error import BaseIndexerException
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("indexer")
 
 
 async def run_tracker_loop(tracker: BaseTracker):
     while True:
         # TODO add exception handler
         await tracker.run()
-        logger.debug("Rerun tracker iteration in %s", tracker.RETRY_DELAY)
+        logger.debug("Rerun tracker %s iteration in %s sec", tracker.name, tracker.RETRY_DELAY)
         await asyncio.sleep(tracker.RETRY_DELAY)
 
 
