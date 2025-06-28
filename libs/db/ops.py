@@ -31,6 +31,21 @@ async def list_dao(conn: Database) -> list[DAO]:
     ) for r in rows]
 
 
+async def get_dao(conn: Database, address: Address) -> Optional[DAO]:
+    row = await conn.fetch_one(
+        """
+        SELECT * FROM dao WHERE address=$1
+        """,
+        address_into_db_format(address),
+    )
+    if row is not None:
+        return DAO(
+            address=address_from_db_format(row.get("address")),
+            jetton_master=address_from_db_format(row.get("jetton_master")),
+        )
+    return None
+
+
 # DAO participant
 
 
@@ -162,18 +177,19 @@ async def get_last_trace(conn: Database, address: Address) -> Optional[TraceLog]
 async def insert_jetton_wallet(conn: Database, jetton_wallet: JettonWallet):
     await conn.execute(
         """
-        INSERT INTO jetton_wallet (jetton_master, address, balance) VALUES ($1, $2, $3)
-        ON CONFLICT (jetton_master, address)
+        INSERT INTO jetton_wallet (address, owner, jetton_master, balance) VALUES ($1, $2, $3, $4)
+        ON CONFLICT (address, jetton_master)
         DO UPDATE SET
-            balance = $3
+            balance = $4
         """,
-        address_into_db_format(jetton_wallet.jetton_master),
         address_into_db_format(jetton_wallet.address),
+        address_into_db_format(jetton_wallet.owner),
+        address_into_db_format(jetton_wallet.jetton_master),
         jetton_wallet.balance,
     )
 
 
-async def get_jetton_wallet(conn: Database, address: Address) -> Optional[JettonWallet]:
+async def get_jetton_wallet_by_address(conn: Database, address: Address) -> Optional[JettonWallet]:
     row = await conn.fetch_one(
         """
         SELECT * FROM jetton_wallet WHERE address=$1
@@ -183,6 +199,24 @@ async def get_jetton_wallet(conn: Database, address: Address) -> Optional[Jetton
     if row is not None:
         return JettonWallet(
             address=address_from_db_format(row.get("address")),
+            owner=address_from_db_format(row.get("owner")),
+            jetton_master=address_from_db_format(row.get("jetton_master")),
+            balance=row.get("balance")
+        )
+    return None
+
+
+async def get_jetton_wallet_by_owner(conn: Database, owner: Address) -> Optional[JettonWallet]:
+    row = await conn.fetch_one(
+        """
+        SELECT * FROM jetton_wallet WHERE owner=$1
+        """,
+        address_into_db_format(owner)
+    )
+    if row is not None:
+        return JettonWallet(
+            address=address_from_db_format(row.get("address")),
+            owner=address_from_db_format(row.get("owner")),
             jetton_master=address_from_db_format(row.get("jetton_master")),
             balance=row.get("balance")
         )

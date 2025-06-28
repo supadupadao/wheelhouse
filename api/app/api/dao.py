@@ -1,6 +1,7 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from fastapi.params import Depends
 from pydantic import BaseModel
+from tonsdk.utils import Address
 
 from api.app.api.utils import APIAddress, get_db
 from libs.db import ops, Database
@@ -22,8 +23,8 @@ class DAOList(BaseModel):
     tags=["DAO"],
     summary="List DAO",
     description=(
-            "Returns a list of all registered DAOs in the system.\n\n"
-            "Each DAO entry includes its contract address and associated jetton master"
+        "Returns a list of all registered DAOs in the system.\n\n"
+        "Each DAO entry includes its contract address and associated jetton master"
     ),
 )
 async def list_dao(conn: Database = Depends(get_db)) -> DAOList:
@@ -34,6 +35,29 @@ async def list_dao(conn: Database = Depends(get_db)) -> DAOList:
             DAOItem(
                 address=APIAddress.from_address(dao.address),
                 jetton_master=APIAddress.from_address(dao.jetton_master),
-            ) for dao in dao_list
+            )
+            for dao in dao_list
         ]
+    )
+
+
+@router.get(
+    "/{address}",
+    tags=["DAO"],
+    summary="Get DAO by address",
+    description=(
+        "Returns details of a specific DAO by its contract address.\n\n"
+        "The response includes the DAO's contract address and associated jetton master."
+    ),
+)
+async def get_dao(address: str, conn: Database = Depends(get_db)) -> DAOItem:
+    dao_address = Address(address)
+    dao = await ops.get_dao(conn, dao_address)
+
+    if not dao:
+        raise HTTPException(status_code=404, detail="DAO not found")
+
+    return DAOItem(
+        address=APIAddress.from_address(dao.address),
+        jetton_master=APIAddress.from_address(dao.jetton_master),
     )

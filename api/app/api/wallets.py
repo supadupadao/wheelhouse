@@ -2,7 +2,6 @@ from dataclasses import dataclass
 from typing import Optional
 
 from fastapi import APIRouter
-from fastapi import HTTPException
 from fastapi.params import Query, Depends
 from tonsdk.utils import Address
 
@@ -21,6 +20,7 @@ class WalletState:
 @dataclass
 class WalletInfo:
     address: APIAddress
+    is_participant: bool
     jetton_wallet: Optional[WalletState]
     lock: Optional[WalletState]
 
@@ -45,19 +45,26 @@ async def list_dao(
 
     wallet_info = await ops.get_dao_participant(conn, dao_address, wallet_address)
     if not wallet_info:
-        raise HTTPException(status_code=404, detail="Wallet not found")
+        return WalletInfo(
+            address=APIAddress.from_address(wallet_address),
+            is_participant=wallet_info is not None,
+            jetton_wallet=None,
+            lock=None,
+        )
 
-    jetton_info = await ops.get_jetton_wallet(conn, wallet_info.jetton_wallet)
-    lock_info = await ops.get_jetton_wallet(conn, wallet_info.lock_address)
+    jetton_info = await ops.get_jetton_wallet_by_address(conn, wallet_info.jetton_wallet)
+    lock_info = await ops.get_jetton_wallet_by_owner(conn, wallet_info.lock_address)
+    print(wallet_info.lock_address.to_string(is_user_friendly=False), lock_info)
 
     return WalletInfo(
         address=APIAddress.from_address(wallet_address),
+        is_participant=wallet_info is not None,
         jetton_wallet=WalletState(
-            address=APIAddress.from_address(jetton_info.address),
-            balance=int(jetton_info.balance),
-        ) if jetton_info else None,
+            address=APIAddress.from_address(wallet_info.jetton_wallet),
+            balance=int(jetton_info.balance) if jetton_info else 0,
+        ),
         lock=WalletState(
-            address=APIAddress.from_address(lock_info.address),
-            balance=int(lock_info.balance),
-        ) if lock_info else None
+            address=APIAddress.from_address(wallet_info.lock_address),
+            balance=int(lock_info.balance) if lock_info else 0,
+        ),
     )
