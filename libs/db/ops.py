@@ -25,10 +25,13 @@ async def list_dao(conn: Database) -> list[DAO]:
     rows = await conn.fetch_all(
         "SELECT * FROM dao",
     )
-    return [DAO(
-        address=address_from_db_format(r.get("address")),
-        jetton_master=address_from_db_format(r.get("jetton_master")),
-    ) for r in rows]
+    return [
+        DAO(
+            address=address_from_db_format(r.get("address")),
+            jetton_master=address_from_db_format(r.get("jetton_master")),
+        )
+        for r in rows
+    ]
 
 
 async def get_dao(conn: Database, address: Address) -> Optional[DAO]:
@@ -60,17 +63,23 @@ async def insert_dao_participant(conn: Database, participant: DAOParticipant) ->
         address_into_db_format(participant.dao),
         address_into_db_format(participant.address),
         address_into_db_format(participant.jetton_wallet),
-        address_into_db_format(participant.lock_address) if participant.lock_address else None
+        (
+            address_into_db_format(participant.lock_address)
+            if participant.lock_address
+            else None
+        ),
     )
 
 
-async def get_dao_participant(conn: Database, dao: Address, address: Address) -> Optional[DAOParticipant]:
+async def get_dao_participant(
+        conn: Database, dao: Address, address: Address
+) -> Optional[DAOParticipant]:
     row = await conn.fetch_one(
         """
         SELECT * FROM dao_participant WHERE dao=$1 AND address=$2
         """,
         address_into_db_format(dao),
-        address_into_db_format(address)
+        address_into_db_format(address),
     )
     if row is not None:
         lock_address = row.get("lock_address")
@@ -78,12 +87,13 @@ async def get_dao_participant(conn: Database, dao: Address, address: Address) ->
             dao=address_from_db_format(row.get("dao")),
             address=address_from_db_format(row.get("address")),
             jetton_wallet=address_from_db_format(row.get("jetton_wallet")),
-            lock_address=address_from_db_format(lock_address) if lock_address else None
+            lock_address=address_from_db_format(lock_address) if lock_address else None,
         )
     return None
 
 
 # Proposal
+
 
 async def insert_proposal(conn: Database, proposal: Proposal) -> None:
     await conn.execute(
@@ -123,7 +133,7 @@ async def insert_proposal(conn: Database, proposal: Proposal) -> None:
         proposal.is_executed,
         proposal.votes_yes,
         proposal.votes_no,
-        proposal.expires_at
+        proposal.expires_at,
     )
 
 
@@ -132,18 +142,45 @@ async def list_proposals(conn: Database, dao: Address) -> list[Proposal]:
         """
         SELECT * FROM proposal WHERE dao = $1
         """,
-        address_into_db_format(dao)
+        address_into_db_format(dao),
     )
-    return [Proposal(
-        address=address_from_db_format(r.get("address")),
-        dao=address_from_db_format(r.get("dao")),
-        id=r.get("id"),
-        is_initialized=r.get("is_initialized"),
-        is_executed=r.get("is_executed"),
-        votes_yes=r.get("votes_yes"),
-        votes_no=r.get("votes_no"),
-        expires_at=r.get("expires_at"),
-    ) for r in rows]
+    return [
+        Proposal(
+            address=address_from_db_format(r.get("address")),
+            dao=address_from_db_format(r.get("dao")),
+            id=r.get("id"),
+            is_initialized=r.get("is_initialized"),
+            is_executed=r.get("is_executed"),
+            votes_yes=r.get("votes_yes"),
+            votes_no=r.get("votes_no"),
+            expires_at=r.get("expires_at"),
+        )
+        for r in rows
+    ]
+
+
+async def get_proposal_by_id(
+        conn: Database, dao: Address, proposal_id: int
+) -> Optional[Proposal]:
+    row = await conn.fetch_one(
+        """
+        SELECT * FROM proposal WHERE dao=$1 AND id=$2
+        """,
+        address_into_db_format(dao),
+        proposal_id,
+    )
+    if row is not None:
+        return Proposal(
+            address=address_from_db_format(row.get("address")),
+            dao=address_from_db_format(row.get("dao")),
+            id=row.get("id"),
+            is_initialized=row.get("is_initialized"),
+            is_executed=row.get("is_executed"),
+            votes_yes=row.get("votes_yes"),
+            votes_no=row.get("votes_no"),
+            expires_at=row.get("expires_at"),
+        )
+    return None
 
 
 # TraceLog
@@ -156,7 +193,7 @@ async def insert_trace(conn: Database, trace_log: TraceLog):
         """,
         address_into_db_format(trace_log.address),
         trace_log.hash,
-        trace_log.utime
+        trace_log.utime,
     )
 
 
@@ -174,6 +211,7 @@ async def get_last_trace(conn: Database, address: Address) -> Optional[TraceLog]
 
 # Jetton Wallet
 
+
 async def insert_jetton_wallet(conn: Database, jetton_wallet: JettonWallet):
     await conn.execute(
         """
@@ -189,35 +227,39 @@ async def insert_jetton_wallet(conn: Database, jetton_wallet: JettonWallet):
     )
 
 
-async def get_jetton_wallet_by_address(conn: Database, address: Address) -> Optional[JettonWallet]:
+async def get_jetton_wallet_by_address(
+        conn: Database, address: Address
+) -> Optional[JettonWallet]:
     row = await conn.fetch_one(
         """
         SELECT * FROM jetton_wallet WHERE address=$1
         """,
-        address_into_db_format(address)
+        address_into_db_format(address),
     )
     if row is not None:
         return JettonWallet(
             address=address_from_db_format(row.get("address")),
             owner=address_from_db_format(row.get("owner")),
             jetton_master=address_from_db_format(row.get("jetton_master")),
-            balance=row.get("balance")
+            balance=row.get("balance"),
         )
     return None
 
 
-async def get_jetton_wallet_by_owner(conn: Database, owner: Address) -> Optional[JettonWallet]:
+async def get_jetton_wallet_by_owner(
+        conn: Database, owner: Address
+) -> Optional[JettonWallet]:
     row = await conn.fetch_one(
         """
         SELECT * FROM jetton_wallet WHERE owner=$1
         """,
-        address_into_db_format(owner)
+        address_into_db_format(owner),
     )
     if row is not None:
         return JettonWallet(
             address=address_from_db_format(row.get("address")),
             owner=address_from_db_format(row.get("owner")),
             jetton_master=address_from_db_format(row.get("jetton_master")),
-            balance=row.get("balance")
+            balance=row.get("balance"),
         )
     return None
