@@ -30,7 +30,7 @@
 
   <div class="block">
     <h2>Proposal expires at</h2>
-    <div class="text-2">{{ new Date(proposal?.expires_at || 0 * 1000).toLocaleString() }} UTC</div>
+    <div class="text-2">{{ new Date((proposal?.expires_at || 0) * 1000).toLocaleString() }} UTC</div>
   </div>
 </template>
 
