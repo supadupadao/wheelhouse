@@ -25,7 +25,7 @@ services:
       dockerfile: indexer/Dockerfile
     environment:
       INDEXER_DB_URL: "postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@db:5432/${SKIPPER_DB:-skipper}"
-      INDEXER_SKIPPER_ADDRESS: ${INDEXER_SKIPPER_ADDRESS}
+      INDEXER_SKIPPER_MINTER_ADDRESS: ${INDEXER_SKIPPER_MINTER_ADDRESS}
       INDEXER_TONAPI_TOKEN: ${INDEXER_TONAPI_TOKEN}
     networks:
       - skipper
@@ -40,7 +40,6 @@ services:
       dockerfile: api/Dockerfile
     environment:
       API_DB_URL: "postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@db:5432/${SKIPPER_DB:-skipper}"
-      API_TONAPI_TOKEN: ${API_TONAPI_TOKEN}
     networks:
       - skipper
     depends_on:
