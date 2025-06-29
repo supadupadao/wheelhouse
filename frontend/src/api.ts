@@ -4,21 +4,27 @@ export interface APIAddress {
 }
 
 export interface ProposalData {
-  id: Number;
+  id: number;
   address: APIAddress;
-  votes_yes: Number;
-  votes_no: Number;
-  expires_at: Number;
+  votes_yes: number;
+  votes_no: number;
+  expires_at: number;
 }
 
-export interface ProposalsResponse {
+export interface ProposalsList {
   proposals: ProposalData[]
 }
 
-export async function fetchProposalsList(dao: string): Promise<ProposalsResponse> {
+export async function fetchProposalsList(dao: string): Promise<ProposalsList> {
   const params = new URLSearchParams({ dao });
   const result = await fetch("/api/proposals?" + params.toString());
-  return await result.json() as ProposalsResponse;
+  return await result.json() as ProposalsList;
+}
+
+export async function fetchProposalItem(dao: string, proposalId: number): Promise<ProposalData> {
+  const params = new URLSearchParams({ dao });
+  const result = await fetch(`/api/proposals/${proposalId}?` + params.toString());
+  return await result.json() as ProposalData;
 }
 
 export interface DaoItem {
@@ -26,13 +32,13 @@ export interface DaoItem {
   jetton_master: APIAddress;
 }
 
-export interface DaoListResponse {
+export interface DaoList {
   dao: DaoItem[]
 }
 
-export async function fetchDaoList(): Promise<DaoListResponse> {
+export async function fetchDaoList(): Promise<DaoList> {
   const result = await fetch("/api/dao");
-  return await result.json() as DaoListResponse;
+  return await result.json() as DaoList;
 }
 
 export async function fetchDaoItem(dao: string): Promise<DaoItem> {
@@ -47,6 +53,7 @@ export interface WalletState {
 
 export interface getWalletInfoResponse {
   address: APIAddress;
+  is_participant: boolean;
   jetton_wallet: WalletState | null;
   lock: WalletState | null;
 }

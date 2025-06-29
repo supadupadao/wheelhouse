@@ -3,10 +3,10 @@ from typing import Optional
 
 from fastapi import APIRouter
 from fastapi.params import Query, Depends
-from tonsdk.utils import Address
 
 from api.app.api.utils import APIAddress, get_db
 from libs.db import ops, Database
+from libs.db.utils import str_to_address
 
 router = APIRouter(prefix="/wallets")
 
@@ -40,8 +40,8 @@ async def list_dao(
         dao: str = Query(..., description="TON Address of the DAO"),
         conn: Database = Depends(get_db),
 ) -> WalletInfo:
-    wallet_address = Address(address)
-    dao_address = Address(dao)
+    wallet_address = str_to_address(address)
+    dao_address = str_to_address(dao)
 
     wallet_info = await ops.get_dao_participant(conn, dao_address, wallet_address)
     if not wallet_info:
@@ -54,7 +54,6 @@ async def list_dao(
 
     jetton_info = await ops.get_jetton_wallet_by_address(conn, wallet_info.jetton_wallet)
     lock_info = await ops.get_jetton_wallet_by_owner(conn, wallet_info.lock_address)
-    print(wallet_info.lock_address.to_string(is_user_friendly=False), lock_info)
 
     return WalletInfo(
         address=APIAddress.from_address(wallet_address),

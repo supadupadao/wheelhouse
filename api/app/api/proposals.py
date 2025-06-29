@@ -1,4 +1,5 @@
 from fastapi import APIRouter
+from fastapi import HTTPException
 from fastapi.params import Depends, Query
 from pydantic import BaseModel
 
@@ -48,6 +49,34 @@ async def list_proposals(
                 votes_yes=int(proposal.votes_yes),
                 votes_no=int(proposal.votes_no),
                 expires_at=proposal.expires_at,
-            ) for proposal in proposals
+            )
+            for proposal in proposals
         ]
+    )
+
+
+@router.get(
+    "/{proposal_id}",
+    summary="Get proposal info",
+    tags=["Proposals"],
+    description="Returns information about a single proposal by its ID.",
+    response_model=ProposalItem,
+)
+async def get_proposal(
+        proposal_id: int,
+        dao: str = Query(..., description="TON Address of the DAO"),
+        conn: Database = Depends(get_db),
+) -> ProposalItem:
+    dao_address = str_to_address(dao)
+    proposal = await ops.get_proposal_by_id(conn, dao_address, proposal_id)
+    if proposal is None:
+        raise HTTPException(status_code=404, detail="Proposal not found")
+    return ProposalItem(
+        id=proposal.id,
+        address=APIAddress.from_address(proposal.address),
+        is_initialized=proposal.is_initialized,
+        is_executed=proposal.is_executed,
+        votes_yes=int(proposal.votes_yes),
+        votes_no=int(proposal.votes_no),
+        expires_at=proposal.expires_at,
     )

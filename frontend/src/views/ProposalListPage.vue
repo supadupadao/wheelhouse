@@ -1,5 +1,5 @@
 <template>
-  <div class="block" v-if="loading">
+  <div class="block" v-if="loading.length">
     <h1>Loading please vait <i class="fa-solid fa-spinner fa-spin-pulse"></i></h1>
   </div>
 
@@ -7,25 +7,36 @@
     <span class="dao-title">DAO Skipper</span> <span class="dao-address">{{ userFriendlyAddress }}</span>
   </div>
 
-  <div class="block" v-if="wallet?.state.connected">
+  <div class="block" v-if="myAddress != null && isParticipant">
     <h2>My balance</h2>
     <div class="flex">
       <div class="box flex-auto">
         <div class="text-2">Top up</div>
         <div class="flex">
-          <input type="text" class="input default flex-auto" placeholder="e.g. 100500 $JETTON" disabled>
-          <button type="button" class="button default flex" @click="lockJetton">Submit</button>
+          <!-- <input type="text" class="input default flex-auto" placeholder="e.g. 100500 $JETTON" disabled> -->
+          <button type="button" class="button default flex" @click="lockJetton">Lock tokens</button>
         </div>
         <div class="text-3">Lock more tokens</div>
       </div>
       <div class="box flex-auto">
         <div class="text-2">Faucet</div>
         <div class="flex">
-          <input type="text" class="input default flex-auto" placeholder="e.g. 100500 $JETTON" disabled>
-          <button type="button" class="button default flex" @click="jettonFaucet">Submit</button>
+          <!-- <input type="text" class="input default flex-auto" placeholder="e.g. 100500 $JETTON" disabled> -->
+          <button type="button" class="button default flex" @click="jettonFaucet">Request tokens</button>
         </div>
         <div class="text-3">Get governance tokens</div>
       </div>
+    </div>
+  </div>
+  <div class="block" v-if="myAddress != null && !isParticipant">
+    <h2>Become a participant</h2>
+    <div class="box flex-auto">
+      <div class="text-2">Request some testnet governance tokens</div>
+      <div class="flex">
+        <!-- <input type="text" class="input default flex-auto" placeholder="e.g. 100500 $JETTON" disabled> -->
+        <button type="button" class="button default flex" @click="jettonFaucet">Request</button>
+      </div>
+      <div class="text-3">After receiving reload page</div>
     </div>
   </div>
 
@@ -38,7 +49,7 @@
         <button type="button" class="button max disabled">Closed</button>
       </div>
       <div>
-        <button type="button" class="button primary" @click="newProposal">New proposal</button>
+        <button v-if="myAddress != null && isParticipant" type="button" class="button primary" @click="newProposal">New proposal</button>
       </div>
     </div>
 
@@ -76,11 +87,12 @@ export default {
   inject: ['wallet'],
   data() {
     return {
-      loading: true,
+      loading: [] as string[],
       daoAddress: Address.parse(this.$route.params.dao as string),
       proposals: [] as ProposalData[],
 
       myAddress: null as Address | null,
+      isParticipant: false,
       lockAddress: null as Address | null,
       lockBalance: 0n,
       jettonWalletAddress: null as Address | null,
@@ -89,9 +101,30 @@ export default {
     }
   },
   async created() {
+    this.loading.push("proposalsList");
     const result = await fetchProposalsList(this.daoAddress.toString());
     this.proposals = result.proposals;
-    this.loading = false;
+    this.loading.pop();
+
+    if (this.wallet?.state.address) {
+      this.loading.push("wallet");
+
+      this.myAddress = Address.parse(this.wallet.state.address.toString());
+
+      const [walletInfo, daoItem] = await Promise.all([
+        fetchWalletInfo(this.daoAddress.toRawString(), this.myAddress.toRawString()),
+        fetchDaoItem(this.daoAddress.toRawString()),
+      ]);
+
+      this.isParticipant = walletInfo.is_participant;
+      this.jettonWalletAddress = walletInfo.jetton_wallet ? Address.parse(walletInfo.jetton_wallet.address.raw) : null;
+      this.lockAddress = walletInfo.lock ? Address.parse(walletInfo.lock.address.raw) : null;
+      this.lockBalance = walletInfo.lock ? BigInt(walletInfo.lock.balance) : 0n;
+      this.jettonMaster = Address.parse(daoItem.jetton_master.raw);
+      this.jettonBalance = walletInfo.jetton_wallet ? BigInt(walletInfo.jetton_wallet.balance) : 0n;
+
+      this.loading.pop();
+    }
   },
   computed: {
     userFriendlyAddress() {
@@ -101,7 +134,7 @@ export default {
   watch: {
     async 'wallet.state.connected'(newVal: boolean) {
       if (newVal) {
-        this.loading = true;
+        this.loading.push("wallet");
 
         const myAddress = Address.parse(this.wallet?.state.address!.toString() || "");
         this.myAddress = myAddress;
@@ -113,13 +146,14 @@ export default {
           fetchDaoItem(this.daoAddress.toRawString()),
         ]);
 
+        this.isParticipant = walletInfo.is_participant;
         this.jettonWalletAddress = walletInfo.jetton_wallet ? Address.parse(walletInfo.jetton_wallet.address.raw) : null;
         this.lockAddress = walletInfo.lock ? Address.parse(walletInfo.lock.address.raw) : null;
         this.lockBalance = walletInfo.lock ? BigInt(walletInfo.lock.balance) : 0n;
         this.jettonMaster = Address.parse(daoItem.jetton_master.raw);
         this.jettonBalance = walletInfo.jetton_wallet ? BigInt(walletInfo.jetton_wallet.balance) : 0n;
 
-        this.loading = false;
+        this.loading.pop();
       }
     }
   },
