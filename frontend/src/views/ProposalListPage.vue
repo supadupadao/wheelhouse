@@ -49,7 +49,9 @@
         <button type="button" class="button max disabled">Closed</button>
       </div>
       <div>
-        <button v-if="myAddress != null && isParticipant" type="button" class="button primary" @click="newProposal">New proposal</button>
+        <RouterLink to="./new_proposal">
+          <button v-if="myAddress != null && isParticipant" type="button" class="button primary" >New proposal</button>
+        </RouterLink>
       </div>
     </div>
 
@@ -199,50 +201,6 @@ export default {
             address: this.jettonWalletAddress?.toString() || "",
             amount: toNano('0.1').toString(),
             payload: payload.toBoc().toString('base64'),
-          },
-        ],
-      });
-    },
-    newProposal() {
-      const payload = beginCell()
-        .storeUint(0x690101, 32)
-        .storeAddress(Address.parse(this.$route.params.dao as string))
-        .storeBit(false)
-        .storeRef(
-          beginCell()
-            .storeUint(0x690401, 32)
-            .storeAddress(Address.parse("UQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAJKZ"))
-            .storeRef(beginCell().endCell())
-            .endCell()
-        )
-        .endCell()
-
-      const codeCell = Cell.fromBase64(lockContract.code);
-      const systemCell = Cell.fromBase64(lockContract.system);
-      const initData = beginCell()
-        .storeRef(systemCell)
-        .storeUint(0, 1)
-        .storeAddress(this.myAddress)
-        .storeAddress(this.jettonMaster!)
-        .endCell();
-
-      this.wallet?.tonConnectUI.sendTransaction({
-        validUntil: Math.floor(Date.now() / 1000) + 360,
-        network: CHAIN.TESTNET,
-        messages: [
-          {
-            address: this.lockAddress?.toString() || "",
-            amount: toNano('0.1').toString(),
-            payload: payload.toBoc().toString('base64'),
-            stateInit: beginCell()
-              .storeBit(false)
-              .storeBit(false)
-              .storeMaybeRef(codeCell)
-              .storeMaybeRef(initData)
-              .storeUint(0, 1)
-              .endCell()
-              .toBoc()
-              .toString('base64'),
           },
         ],
       });

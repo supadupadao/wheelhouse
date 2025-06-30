@@ -106,7 +106,9 @@ async def insert_proposal(conn: Database, proposal: Proposal) -> None:
             is_executed,
             votes_yes,
             votes_no,
-            expires_at
+            expires_at,
+            receiver,
+            payload
         ) VALUES (
             $1,
             $2,
@@ -115,7 +117,9 @@ async def insert_proposal(conn: Database, proposal: Proposal) -> None:
             $5,
             $6,
             $7,
-            $8
+            $8,
+            $9,
+            $10
         ) ON CONFLICT (address)
         DO UPDATE SET
             dao=$2,
@@ -124,7 +128,9 @@ async def insert_proposal(conn: Database, proposal: Proposal) -> None:
             is_executed=$5,
             votes_yes=$6,
             votes_no=$7,
-            expires_at=$8
+            expires_at=$8,
+            receiver=$9,
+            payload=$10
         """,
         address_into_db_format(proposal.address),
         address_into_db_format(proposal.dao),
@@ -134,6 +140,8 @@ async def insert_proposal(conn: Database, proposal: Proposal) -> None:
         proposal.votes_yes,
         proposal.votes_no,
         proposal.expires_at,
+        address_into_db_format(proposal.receiver),
+        proposal.payload
     )
 
 
@@ -154,6 +162,8 @@ async def list_proposals(conn: Database, dao: Address) -> list[Proposal]:
             votes_yes=r.get("votes_yes"),
             votes_no=r.get("votes_no"),
             expires_at=r.get("expires_at"),
+            receiver=address_from_db_format(r.get("receiver")),
+            payload=r.get("payload"),
         )
         for r in rows
     ]
@@ -179,6 +189,8 @@ async def get_proposal_by_id(
             votes_yes=row.get("votes_yes"),
             votes_no=row.get("votes_no"),
             expires_at=row.get("expires_at"),
+            receiver=address_from_db_format(row.get("receiver")),
+            payload=row.get("payload"),
         )
     return None
 
