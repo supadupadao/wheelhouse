@@ -9,6 +9,8 @@ export interface ProposalData {
   votes_yes: number;
   votes_no: number;
   expires_at: number;
+  receiver: APIAddress;
+  payload: string;
 }
 
 export interface ProposalsList {

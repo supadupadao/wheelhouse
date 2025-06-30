@@ -23,6 +23,8 @@ class ProposalData:
     votes_yes: Decimal
     votes_no: Decimal
     expires_at: int
+    receiver: Address
+    payload: str
 
 
 @dataclass()
@@ -103,6 +105,13 @@ async def fetch_proposal_state(
         votes_yes = int(result.stack[3].num, 16)
         votes_no = int(result.stack[4].num, 16)
         expires_at = int(result.stack[5].num, 16)
+        proposal_payload_tuple = result.stack[6].tuple
+
+        receiver_cell: Cell = Cell.one_from_boc(proposal_payload_tuple[0].cell)
+        receiver_parser = receiver_cell.begin_parse()
+        receiver_addr = receiver_parser.read_msg_addr()
+
+        payload_boc = proposal_payload_tuple[1].cell
 
         return ProposalData(
             proposal_id=proposal_id,
@@ -111,6 +120,8 @@ async def fetch_proposal_state(
             votes_yes=Decimal(votes_yes),
             votes_no=Decimal(votes_no),
             expires_at=expires_at,
+            receiver=receiver_addr,
+            payload=payload_boc,
         )
     else:
         raise TonApiError("Error fetching proposal state")

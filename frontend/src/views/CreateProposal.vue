@@ -4,48 +4,25 @@
   </div>
 
   <div class="block">
-    <h1>Proposal # {{ proposal?.id }}</h1>
-    <h2>{{ proposal?.address.user_friendly }}</h2>
+    <h1>Creating new proposal</h1>
+  </div>
+
+  <div class="block max-w-md">
+    <input type="text" class="input default w-full max-w-md" placeholder="Proposal receiver address" v-model="proposalReceiver">
+    <input type="text" class="input default w-full max-w-md" placeholder="Proposal payload in base64" v-model="proposalPayload">
+    <input type="number" class="input default w-full max-w-md" placeholder="Proposal amount in nanoTONs" v-model.number="proposalAmount">
   </div>
 
   <div class="block">
-    <h2>My balance</h2>
-    <div class="flex">
-      <div class="box flex-auto">
-        <div class="text-2">{{ proposal?.votes_yes }} Votes YES</div>
-        <div class="flex">
-          <button v-if="wallet?.state.connected && isParticipant" type="button" class="button primary m-4" @click="() => {vote(Number($route.params.proposal_id as string) , true)}">Vote YES</button>
-        </div>
-        <div class="text-3">{{ proposal?.votes_yes }} supported this proposal</div>
-      </div>
-      <div class="box flex-auto">
-        <div class="text-2">{{ proposal?.votes_no }} Votes NO</div>
-        <div class="flex">
-          <button v-if="wallet?.state.connected && isParticipant" type="button" class="button primary m-4" @click="() => {vote(Number($route.params.proposal_id as string) , false)}">Vote NO</button>
-        </div>
-        <div class="text-3">{{ proposal?.votes_no }} did not support this proposal</div>
-      </div>
-    </div>
-  </div>
-
-  <div class="block">
-    <h2>Proposal action</h2>
-    <h2>Receiver</h2>
-    <div class="text-2">{{ proposal?.receiver.user_friendly }}</div>
-    <h2>Action</h2>
-    <div class="text-2">{{ proposal?.payload }}</div>
-  </div>
-
-  <div class="block">
-    <h2>Proposal expires at</h2>
-    <div class="text-2">{{ new Date((proposal?.expires_at || 0) * 1000).toLocaleString() }} UTC</div>
+    <button type="button" class="button primary" @click="newProposal">Create proposal</button>
   </div>
 </template>
 
 <script lang="ts">
 import { fetchDaoItem, fetchProposalItem, fetchWalletInfo, type ProposalData } from '@/api';
-import { Address, beginCell, toNano } from '@ton/core';
+import { Address, beginCell, Cell, toNano } from '@ton/core';
 import { CHAIN } from '@tonconnect/ui';
+import lockContract from "@/assets/lockContract.json";
 
 export default {
   inject: ["wallet"],
@@ -53,7 +30,11 @@ export default {
     return {
       loading: [] as string[],
       daoAddress: Address.parse(this.$route.params.dao as string),
-      proposal: null as ProposalData | null,
+
+      proposalReceiver: "",
+      proposalPayload: beginCell().endCell().toBoc().toString('base64'),
+      proposalAmount: toNano('0.1'),
+
       myAddress: null as Address | null,
       isParticipant: false,
       lockAddress: null as Address | null,
@@ -64,11 +45,6 @@ export default {
     }
   },
   async created() {
-    this.loading.push("proposalData");
-    const result = await fetchProposalItem(this.daoAddress.toRawString(), Number(this.$route.params.proposal_id));
-    this.proposal = result;
-    this.loading.pop();
-
     if (this.wallet?.state.address) {
       this.loading.push("wallet");
 
@@ -94,13 +70,10 @@ export default {
       if (newVal) {
         this.loading.push("wallet");
 
-        const myAddress = Address.parse(this.wallet?.state.address!.toString() || "");
-        this.myAddress = myAddress;
-
-        console.log("Connected to wallet", myAddress.toString());
+        this.myAddress = Address.parse(this.wallet?.state.address!.toString() || "");
 
         const [walletInfo, daoItem] = await Promise.all([
-          fetchWalletInfo(this.daoAddress.toRawString(), myAddress.toRawString()),
+          fetchWalletInfo(this.daoAddress.toRawString(), this.myAddress.toRawString()),
           fetchDaoItem(this.daoAddress.toRawString()),
         ]);
 
@@ -116,31 +89,46 @@ export default {
     }
   },
   methods: {
-    vote(proposalId: number, decision: boolean) {
-      let startTime = Math.floor(Date.now() / 1000);
-
+    newProposal() {
       const payload = beginCell()
         .storeUint(0x690101, 32)
         .storeAddress(Address.parse(this.$route.params.dao as string))
-        .storeBit(true)
-        .storeUint(startTime + 1209600, 64)
+        .storeBit(false)
         .storeRef(
           beginCell()
-            .storeUint(0x690402, 32)
-            .storeUint(proposalId, 64)
-            .storeBit(decision)
+            .storeUint(0x690401, 32)
+            .storeAddress(Address.parse(this.proposalReceiver))
+            .storeRef(Cell.fromBase64(this.proposalPayload))
             .endCell()
         )
         .endCell()
 
-      this.wallet.tonConnectUI.sendTransaction({
+      const codeCell = Cell.fromBase64(lockContract.code);
+      const systemCell = Cell.fromBase64(lockContract.system);
+      const initData = beginCell()
+        .storeRef(systemCell)
+        .storeUint(0, 1)
+        .storeAddress(this.myAddress)
+        .storeAddress(this.jettonMaster!)
+        .endCell();
+
+      this.wallet?.tonConnectUI.sendTransaction({
         validUntil: Math.floor(Date.now() / 1000) + 360,
         network: CHAIN.TESTNET,
         messages: [
           {
             address: this.lockAddress?.toString() || "",
-            amount: toNano('0.2').toString(),
+            amount: this.proposalAmount.toString(),
             payload: payload.toBoc().toString('base64'),
+            stateInit: beginCell()
+              .storeBit(false)
+              .storeBit(false)
+              .storeMaybeRef(codeCell)
+              .storeMaybeRef(initData)
+              .storeUint(0, 1)
+              .endCell()
+              .toBoc()
+              .toString('base64'),
           },
         ],
       });

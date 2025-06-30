@@ -48,6 +48,8 @@ class SkipperTracker(BaseTracker):
                             votes_yes=parsed_trace.proposal_data.votes_yes,
                             votes_no=parsed_trace.proposal_data.votes_no,
                             expires_at=parsed_trace.proposal_data.expires_at,
+                            receiver=parsed_trace.proposal_data.receiver,
+                            payload=parsed_trace.proposal_data.payload,
                         ))
 
                     await insert_trace(self.ctx.db, TraceLog(

@@ -42,6 +42,8 @@ class Proposal:
     votes_yes: Decimal
     votes_no: Decimal
     expires_at: int
+    receiver: Address
+    payload: str
 
 
 @dataclass

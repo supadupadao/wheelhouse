@@ -18,6 +18,8 @@ class ProposalItem(BaseModel):
     votes_yes: int
     votes_no: int
     expires_at: int
+    receiver: APIAddress
+    payload: str
 
 
 class ProposalsList(BaseModel):
@@ -49,6 +51,8 @@ async def list_proposals(
                 votes_yes=int(proposal.votes_yes),
                 votes_no=int(proposal.votes_no),
                 expires_at=proposal.expires_at,
+                receiver=APIAddress.from_address(proposal.receiver),
+                payload=proposal.payload,
             )
             for proposal in proposals
         ]
@@ -79,4 +83,6 @@ async def get_proposal(
         votes_yes=int(proposal.votes_yes),
         votes_no=int(proposal.votes_no),
         expires_at=proposal.expires_at,
+        receiver=APIAddress.from_address(proposal.receiver),
+        payload=proposal.payload,
     )

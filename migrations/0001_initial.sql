@@ -19,7 +19,11 @@ CREATE TABLE IF NOT EXISTS proposal (
     is_executed BOOLEAN NOT NULL,
     votes_yes NUMERIC(39, 0) NOT NULL DEFAULT 0,
     votes_no NUMERIC(39, 0) NOT NULL DEFAULT 0,
-    expires_at BIGINT NOT NULL
+    expires_at BIGINT NOT NULL,
+
+    --- Payload
+    receiver BYTEA NOT NULL,
+    payload TEXT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS jetton_wallet (
