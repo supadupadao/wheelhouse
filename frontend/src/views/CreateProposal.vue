@@ -19,10 +19,11 @@
 </template>
 
 <script lang="ts">
-import { fetchDaoItem, fetchProposalItem, fetchWalletInfo, type ProposalData } from '@/api';
+import { fetchDaoItem, fetchWalletInfo, type ProposalData } from '@/api';
 import { Address, beginCell, Cell, toNano } from '@ton/core';
 import { CHAIN } from '@tonconnect/ui';
 import lockContract from "@/assets/lockContract.json";
+import { nanoTonToTon } from '@/utils';
 
 export default {
   inject: ["wallet"],
@@ -33,7 +34,7 @@ export default {
 
       proposalReceiver: "",
       proposalPayload: beginCell().endCell().toBoc().toString('base64'),
-      proposalAmount: toNano('0.1'),
+      proposalAmount: nanoTonToTon(Number(toNano('0.1'))),
 
       myAddress: null as Address | null,
       isParticipant: false,
@@ -118,7 +119,7 @@ export default {
         messages: [
           {
             address: this.lockAddress?.toString() || "",
-            amount: this.proposalAmount.toString(),
+            amount: toNano(this.proposalAmount.toString()).toString(),
             payload: payload.toBoc().toString('base64'),
             stateInit: beginCell()
               .storeBit(false)
