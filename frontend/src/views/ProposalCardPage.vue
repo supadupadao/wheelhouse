@@ -12,18 +12,18 @@
     <h2>My balance</h2>
     <div class="flex">
       <div class="box flex-auto">
-        <div class="text-2">{{ proposal?.votes_yes }} Votes YES</div>
+        <div class="text-2">{{ nanoTonToTon(proposal?.votes_yes!) }} Votes YES</div>
         <div class="flex">
           <button v-if="wallet?.state.connected && isParticipant" type="button" class="button primary m-4" @click="() => {vote(Number($route.params.proposal_id as string) , true)}">Vote YES</button>
         </div>
-        <div class="text-3">{{ proposal?.votes_yes }} supported this proposal</div>
+        <div class="text-3">{{ nanoTonToTon(proposal?.votes_yes!) }} supported this proposal</div>
       </div>
       <div class="box flex-auto">
-        <div class="text-2">{{ proposal?.votes_no }} Votes NO</div>
+        <div class="text-2">{{ nanoTonToTon(proposal?.votes_no!) }} Votes NO</div>
         <div class="flex">
           <button v-if="wallet?.state.connected && isParticipant" type="button" class="button primary m-4" @click="() => {vote(Number($route.params.proposal_id as string) , false)}">Vote NO</button>
         </div>
-        <div class="text-3">{{ proposal?.votes_no }} did not support this proposal</div>
+        <div class="text-3">{{ nanoTonToTon(proposal?.votes_no!) }} did not support this proposal</div>
       </div>
     </div>
   </div>
@@ -44,6 +44,7 @@
 
 <script lang="ts">
 import { fetchDaoItem, fetchProposalItem, fetchWalletInfo, type ProposalData } from '@/api';
+import { nanoTonToTon } from '@/utils';
 import { Address, beginCell, toNano } from '@ton/core';
 import { CHAIN } from '@tonconnect/ui';
 
@@ -116,6 +117,7 @@ export default {
     }
   },
   methods: {
+    nanoTonToTon,
     vote(proposalId: number, decision: boolean) {
       let startTime = Math.floor(Date.now() / 1000);
 
@@ -139,7 +141,7 @@ export default {
         messages: [
           {
             address: this.lockAddress?.toString() || "",
-            amount: toNano('0.2').toString(),
+            amount: toNano('0.5').toString(),
             payload: payload.toBoc().toString('base64'),
           },
         ],

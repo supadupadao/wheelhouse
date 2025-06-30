@@ -16,7 +16,7 @@
           <!-- <input type="text" class="input default flex-auto" placeholder="e.g. 100500 $JETTON" disabled> -->
           <button type="button" class="button default flex" @click="lockJetton">Lock tokens</button>
         </div>
-        <div class="text-3">Lock more tokens</div>
+        <div class="text-3">Lock more tokens (You have {{ nanoTonToTon(Number(jettonBalance)) }} jettons, {{ nanoTonToTon(Number(lockBalance)) }} locked)</div>
       </div>
       <div class="box flex-auto">
         <div class="text-2">Faucet</div>
@@ -61,8 +61,8 @@
           <th>#</th>
           <th>Title</th>
           <th>Status</th>
-          <th>Votes</th>
-          <th>Date</th>
+          <th>Votes (yes / no)</th>
+          <th>Expires date</th>
         </tr>
       </thead>
       <tbody>
@@ -70,8 +70,8 @@
           <td>{{ proposal.id }}</td>
           <td>Proposal</td>
           <td>Status</td>
-          <td>{{ proposal.votes_yes }} - {{ proposal.votes_no }}</td>
-          <td>{{ proposal.expires_at }}</td>
+          <td>{{ nanoTonToTon(proposal.votes_yes) }} / {{ nanoTonToTon(proposal.votes_no) }}</td>
+          <td>{{ new Date((proposal.expires_at || 0) * 1000).toLocaleString() }} UTC</td>
         </tr>
       </tbody>
     </table>
@@ -80,7 +80,7 @@
 
 <script lang="ts">
 import { fetchDaoItem, fetchProposalsList, fetchWalletInfo, type ProposalData } from '@/api';
-import { cropTonAddress } from '@/utils';
+import { cropTonAddress, nanoTonToTon } from '@/utils';
 import { Address, beginCell, Cell, toNano } from '@ton/core';
 import { CHAIN } from '@tonconnect/ui';
 import lockContract from "@/assets/lockContract.json";
@@ -160,11 +160,12 @@ export default {
     }
   },
   methods: {
+    nanoTonToTon,
     lockJetton() {
       const payload = beginCell()
         .storeUint(0x0f8a7ea5, 32)
         .storeUint(0, 64)
-        .storeCoins(1)
+        .storeCoins(this.jettonBalance)
         .storeAddress(this.lockAddress)
         .storeAddress(this.lockAddress)
         .storeMaybeRef(null)
@@ -210,7 +211,7 @@ export default {
         .storeUint(0x133704, 32)
         .storeUint(0, 64)
         .storeAddress(this.myAddress)
-        .storeCoins(1)
+        .storeCoins(toNano('100000'))
         .endCell()
 
       this.wallet?.tonConnectUI.sendTransaction({
