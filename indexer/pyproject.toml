@@ -7,10 +7,13 @@ requires-python = ">=3.12"
 dependencies = [
     "aiolimiter>=1.2.1",
     "asyncpg>=0.30.0",
+    "libs",
     "pydantic>=2.11.4",
     "pydantic-settings>=2.9.1",
     "pytonapi>=0.4.9",
-    "ruff>=0.11.8",
     "tonsdk>=1.0.15",
     "uvloop>=0.21.0",
 ]
+
+[dependency-groups]
+dev = ["ruff>=0.12.2", "wemake-python-styleguide>=1.2.0"]

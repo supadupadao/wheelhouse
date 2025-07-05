@@ -11,3 +11,6 @@ dependencies = [
     "pydantic-settings>=2.9.1",
     "tonsdk>=1.0.15",
 ]
+
+[dependency-groups]
+dev = ["ruff>=0.12.2"]

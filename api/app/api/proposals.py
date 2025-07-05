@@ -31,13 +31,13 @@ class ProposalsList(BaseModel):
     summary="List proposals",
     tags=["Proposals"],
     description=(
-            "Returns a list of proposals for the specified DAO.\n\n"
-            "Each proposal includes its status (initialized, executed), vote counts, expiration timestamp"
+        "Returns a list of proposals for the specified DAO.\n\n"
+        "Each proposal includes its status (initialized, executed), vote counts, expiration timestamp"
     ),
 )
 async def list_proposals(
-        dao: str = Query(..., description="TON Address of the DAO"),
-        conn: Database = Depends(get_db),
+    dao: str = Query(..., description="TON Address of the DAO"),
+    conn: Database = Depends(get_db),
 ) -> ProposalsList:
     dao_address = str_to_address(dao)
     proposals = await ops.list_proposals(conn, dao_address)
@@ -67,9 +67,9 @@ async def list_proposals(
     response_model=ProposalItem,
 )
 async def get_proposal(
-        proposal_id: int,
-        dao: str = Query(..., description="TON Address of the DAO"),
-        conn: Database = Depends(get_db),
+    proposal_id: int,
+    dao: str = Query(..., description="TON Address of the DAO"),
+    conn: Database = Depends(get_db),
 ) -> ProposalItem:
     dao_address = str_to_address(dao)
     proposal = await ops.get_proposal_by_id(conn, dao_address, proposal_id)

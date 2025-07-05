@@ -6,13 +6,13 @@ from libs.error import IndexerSettingsError
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_prefix="indexer_")
+    model_config = SettingsConfigDict(env_prefix="INDEXER_")
 
-    is_testnet: bool = True
-    log_level: str = "INFO"
-    db_url: str = "postgresql://postgres:password@localhost:5432/skipper"
-    skipper_minter_address: str = "EQ..."
-    tonapi_token: Optional[str] = None
+    IS_TESTNET: bool = True
+    LOG_LEVEL: str = "INFO"
+    DB_URL: str = "postgresql://postgres:password@localhost:5432/skipper"
+    SKIPPER_MINTER_ADDRESS: str = "EQ..."
+    TONAPI_TOKEN: Optional[str] = None
 
 
 def init_settings() -> Settings:

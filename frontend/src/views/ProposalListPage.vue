@@ -169,7 +169,8 @@ export default {
         .storeAddress(this.lockAddress)
         .storeAddress(this.lockAddress)
         .storeMaybeRef(null)
-        .storeCoins(1)
+        .storeCoins(toNano('0.1'))
+        .storeMaybeRef(null)
         .endCell();
 
       const codeCell = Cell.fromBase64(lockContract.code);
@@ -200,7 +201,7 @@ export default {
           },
           {
             address: this.jettonWalletAddress?.toString() || "",
-            amount: toNano('0.1').toString(),
+            amount: toNano('0.2').toString(),
             payload: payload.toBoc().toString('base64'),
           },
         ],

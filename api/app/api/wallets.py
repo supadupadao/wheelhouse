@@ -30,15 +30,15 @@ class WalletInfo:
     tags=["User"],
     summary="Get wallet information by address",
     description=(
-            "Retrieves detailed information about a specific wallet, including its jetton wallet address, "
-            "jetton balance, lock address, and lock balance. "
-            "Requires the TON address of the DAO as a query parameter."
+        "Retrieves detailed information about a specific wallet, including its jetton wallet address, "
+        "jetton balance, lock address, and lock balance. "
+        "Requires the TON address of the DAO as a query parameter."
     ),
 )
 async def list_dao(
-        address: str,
-        dao: str = Query(..., description="TON Address of the DAO"),
-        conn: Database = Depends(get_db),
+    address: str,
+    dao: str = Query(..., description="TON Address of the DAO"),
+    conn: Database = Depends(get_db),
 ) -> WalletInfo:
     wallet_address = str_to_address(address)
     dao_address = str_to_address(dao)
@@ -52,7 +52,9 @@ async def list_dao(
             lock=None,
         )
 
-    jetton_info = await ops.get_jetton_wallet_by_address(conn, wallet_info.jetton_wallet)
+    jetton_info = await ops.get_jetton_wallet_by_address(
+        conn, wallet_info.jetton_wallet
+    )
     lock_info = await ops.get_jetton_wallet_by_owner(conn, wallet_info.lock_address)
 
     return WalletInfo(

@@ -32,6 +32,10 @@ export async function fetchProposalItem(dao: string, proposalId: number): Promis
 export interface DaoItem {
   address: APIAddress;
   jetton_master: APIAddress;
+  jetton_name: string;
+  jetton_symbol: string;
+  jetton_description?: string;
+  jetton_icon_url?: string;
 }
 
 export interface DaoList {

@@ -22,7 +22,9 @@ async def run_tracker_loop(tracker: BaseTracker):
     while True:
         # TODO add exception handler
         await tracker.run()
-        logger.debug("Rerun tracker %s iteration in %s sec", tracker.name, tracker.RETRY_DELAY)
+        logger.debug(
+            "Rerun tracker %s iteration in %s sec", tracker.name, tracker.RETRY_DELAY
+        )
         await asyncio.sleep(tracker.RETRY_DELAY)
 
 
@@ -46,10 +48,11 @@ if __name__ == "__main__":
     try:
         settings = init_settings()
 
-        init_logging(settings.log_level)
+        init_logging(settings.LOG_LEVEL)
 
-        db = Database(settings.db_url)
-        tonapi_client = init_tonapi_client(settings.tonapi_token, settings.is_testnet)
+        print(settings.DB_URL)
+        db = Database(settings.DB_URL)
+        tonapi_client = init_tonapi_client(settings.TONAPI_TOKEN, settings.IS_TESTNET)
     except BaseIndexerException as err:
         logger.error("Initialization error: %s", err)
     else:

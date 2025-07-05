@@ -52,4 +52,12 @@ class Database:
             await self.pool.release(conn)
 
 
-__all__ = ["Database", "DAO", "Wallet", "Proposal", "Vote", "TraceLog", "address_into_db_format"]
+__all__ = [
+    "Database",
+    "DAO",
+    "Wallet",
+    "Proposal",
+    "Vote",
+    "TraceLog",
+    "address_into_db_format",
+]

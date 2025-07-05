@@ -46,7 +46,7 @@ class VoteProposalState(SkipperState):
 
 
 async def parse_skipper_trace(
-        skipper_address: Address, tonapi_client: AsyncTonapi, trace_info: Trace
+    skipper_address: Address, tonapi_client: AsyncTonapi, trace_info: Trace
 ):
     state = SkipperState(skipper_address=skipper_address, tonapi_client=tonapi_client)
 
@@ -66,11 +66,11 @@ async def find_skipper(state: S, trace: Trace) -> Optional[S]:
             opcode = s.read_uint(32)
             if opcode == 0x690102:
                 # TODO FIXME
-                owner = s.read_msg_addr()
+                s.read_msg_addr()
                 if s.read_bit():
-                    lock_period = s.read_uint(64)
-                voter_unlock_date = s.read_uint(64)
-                amount = s.read_coins()
+                    s.read_uint(64)
+                s.read_uint(64)
+                s.read_coins()
                 # TODO FIXME
 
                 payload = s.read_ref()
@@ -91,9 +91,7 @@ async def find_skipper(state: S, trace: Trace) -> Optional[S]:
     return None
 
 
-async def fetch_proposal_state(
-        state: S, proposal_contract: str
-) -> ProposalData:
+async def fetch_proposal_state(state: S, proposal_contract: str) -> ProposalData:
     async with limiter:
         result = await state.tonapi_client.blockchain.execute_get_method(
             proposal_contract, "get_proposal_data"

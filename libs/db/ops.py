@@ -13,11 +13,22 @@ from libs.db.utils import address_from_db_format
 async def insert_dao(conn: Database, dao: DAO) -> None:
     await conn.execute(
         """
-        INSERT INTO dao (address, jetton_master) VALUES ($1, $2)
+        INSERT INTO dao (
+            address,
+            jetton_master,
+            jetton_name,
+            jetton_symbol,
+            jetton_icon_url,
+            jetton_description
+        ) VALUES ($1, $2, $3, $4, $5, $6)
         ON CONFLICT (address) DO UPDATE set jetton_master=$2
         """,
         address_into_db_format(dao.address),
         address_into_db_format(dao.jetton_master),
+        dao.jetton_name,
+        dao.jetton_symbol,
+        dao.jetton_icon_url,
+        dao.jetton_description,
     )
 
 
@@ -29,6 +40,10 @@ async def list_dao(conn: Database) -> list[DAO]:
         DAO(
             address=address_from_db_format(r.get("address")),
             jetton_master=address_from_db_format(r.get("jetton_master")),
+            jetton_name=r.get("jetton_name"),
+            jetton_symbol=r.get("jetton_symbol"),
+            jetton_description=r.get("jetton_description"),
+            jetton_icon_url=r.get("jetton_icon_url"),
         )
         for r in rows
     ]
@@ -45,6 +60,10 @@ async def get_dao(conn: Database, address: Address) -> Optional[DAO]:
         return DAO(
             address=address_from_db_format(row.get("address")),
             jetton_master=address_from_db_format(row.get("jetton_master")),
+            jetton_name=row.get("jetton_name"),
+            jetton_symbol=row.get("jetton_symbol"),
+            jetton_description=row.get("jetton_description"),
+            jetton_icon_url=row.get("jetton_icon_url"),
         )
     return None
 
@@ -72,7 +91,7 @@ async def insert_dao_participant(conn: Database, participant: DAOParticipant) ->
 
 
 async def get_dao_participant(
-        conn: Database, dao: Address, address: Address
+    conn: Database, dao: Address, address: Address
 ) -> Optional[DAOParticipant]:
     row = await conn.fetch_one(
         """
@@ -141,7 +160,7 @@ async def insert_proposal(conn: Database, proposal: Proposal) -> None:
         proposal.votes_no,
         proposal.expires_at,
         address_into_db_format(proposal.receiver),
-        proposal.payload
+        proposal.payload,
     )
 
 
@@ -170,7 +189,7 @@ async def list_proposals(conn: Database, dao: Address) -> list[Proposal]:
 
 
 async def get_proposal_by_id(
-        conn: Database, dao: Address, proposal_id: int
+    conn: Database, dao: Address, proposal_id: int
 ) -> Optional[Proposal]:
     row = await conn.fetch_one(
         """
@@ -240,7 +259,7 @@ async def insert_jetton_wallet(conn: Database, jetton_wallet: JettonWallet):
 
 
 async def get_jetton_wallet_by_address(
-        conn: Database, address: Address
+    conn: Database, address: Address
 ) -> Optional[JettonWallet]:
     row = await conn.fetch_one(
         """
@@ -259,7 +278,7 @@ async def get_jetton_wallet_by_address(
 
 
 async def get_jetton_wallet_by_owner(
-        conn: Database, owner: Address
+    conn: Database, owner: Address
 ) -> Optional[JettonWallet]:
     row = await conn.fetch_one(
         """
