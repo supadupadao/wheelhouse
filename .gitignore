@@ -1,4 +1,8 @@
 .env
+.venv/
 .vscode/
 .idea/
+.ropeproject/
+.ruff_cache/
 __pycache__/
+.DS_Store

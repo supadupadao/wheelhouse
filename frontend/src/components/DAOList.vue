@@ -3,7 +3,7 @@
     <li v-for="dao in daos" :key="dao.address.raw">
       <router-link :to="`/${dao.address.raw}/proposals`">
         <div class="border border-gray-400 rounded-md p-8">
-          DAO - {{ dao.address.user_friendly }}
+          {{ dao.jetton_name }}
         </div>
       </router-link>
     </li>
@@ -11,7 +11,7 @@
 </template>
 
 <script lang="ts">
-import { fetchDaoList, type DaoItem } from '@/api';
+import { fetchDaoList, type DaoItem } from '@/api'
 
 export default {
   data() {
@@ -20,8 +20,8 @@ export default {
     }
   },
   async created() {
-    const result = await fetchDaoList();
-    this.daos = result.dao;
-  }
+    const result = await fetchDaoList()
+    this.daos = result.dao
+  },
 }
 </script>

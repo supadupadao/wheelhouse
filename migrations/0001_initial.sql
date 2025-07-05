@@ -1,6 +1,10 @@
 CREATE TABLE IF NOT EXISTS dao (
     address BYTEA PRIMARY KEY,
-    jetton_master BYTEA NOT NULL UNIQUE
+    jetton_master BYTEA NOT NULL UNIQUE,
+    jetton_name TEXT NOT NULL,
+    jetton_symbol TEXT NOT NULL,
+    jetton_icon_url TEXT,
+    jetton_description TEXT
 );
 
 CREATE TABLE IF NOT EXISTS dao_participant (

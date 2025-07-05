@@ -9,6 +9,10 @@ from tonsdk.utils import Address
 class DAO:
     address: Address
     jetton_master: Address
+    jetton_name: str
+    jetton_symbol: str
+    jetton_icon_url: Optional[str]
+    jetton_description: Optional[str]
 
 
 @dataclass

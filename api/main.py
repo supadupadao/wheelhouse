@@ -17,7 +17,7 @@ class CustomFastAPI(FastAPI):
 
 @asynccontextmanager
 async def lifespan(application: CustomFastAPI):
-    db = Database(init_settings().db_url)
+    db = Database(init_settings().DB_URL)
     await db.connect()
 
     application.state = AppState()
