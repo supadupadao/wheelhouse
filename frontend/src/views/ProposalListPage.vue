@@ -4,7 +4,8 @@
   </div>
 
   <div class="block">
-    <span class="dao-title">DAO Skipper</span> <span class="dao-address">{{ userFriendlyAddress }}</span>
+    <span class="dao-title">DAO Skipper</span>
+    <span class="dao-address">{{ userFriendlyAddress }}</span>
   </div>
 
   <div class="block" v-if="myAddress != null && isParticipant">
@@ -16,13 +17,18 @@
           <!-- <input type="text" class="input default flex-auto" placeholder="e.g. 100500 $JETTON" disabled> -->
           <button type="button" class="button default flex" @click="lockJetton">Lock tokens</button>
         </div>
-        <div class="text-3">Lock more tokens (You have {{ nanoTonToTon(Number(jettonBalance)) }} jettons, {{ nanoTonToTon(Number(lockBalance)) }} locked)</div>
+        <div class="text-3">
+          Lock more tokens (You have {{ nanoTonToTon(Number(jettonBalance)) }} jettons,
+          {{ nanoTonToTon(Number(lockBalance)) }} locked)
+        </div>
       </div>
       <div class="box flex-auto">
         <div class="text-2">Faucet</div>
         <div class="flex">
           <!-- <input type="text" class="input default flex-auto" placeholder="e.g. 100500 $JETTON" disabled> -->
-          <button type="button" class="button default flex" @click="jettonFaucet">Request tokens</button>
+          <button type="button" class="button default flex" @click="jettonFaucet">
+            Request tokens
+          </button>
         </div>
         <div class="text-3">Get governance tokens</div>
       </div>
@@ -50,7 +56,9 @@
       </div>
       <div>
         <RouterLink to="./new_proposal">
-          <button v-if="myAddress != null && isParticipant" type="button" class="button primary" >New proposal</button>
+          <button v-if="myAddress != null && isParticipant" type="button" class="button primary">
+            New proposal
+          </button>
         </RouterLink>
       </div>
     </div>
@@ -66,7 +74,11 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="proposal in proposals" class="cursor-pointer" @click="$router.push(`./proposal/${proposal.id}`)">
+        <tr
+          v-for="proposal in proposals"
+          class="cursor-pointer"
+          @click="$router.push(`./proposal/${proposal.id}`)"
+        >
           <td>{{ proposal.id }}</td>
           <td>Proposal</td>
           <td>Status</td>
@@ -79,11 +91,10 @@
 </template>
 
 <script lang="ts">
-import { fetchDaoItem, fetchProposalsList, fetchWalletInfo, type ProposalData } from '@/api';
-import { cropTonAddress, nanoTonToTon } from '@/utils';
-import { Address, beginCell, Cell, toNano } from '@ton/core';
-import { CHAIN } from '@tonconnect/ui';
-import lockContract from "@/assets/lockContract.json";
+import { fetchDaoItem, fetchProposalsList, fetchWalletInfo, type ProposalData } from '@/api'
+import { cropTonAddress, nanoTonToTon } from '@/utils'
+import { Address, beginCell, Cell, storeStateInit, toNano } from '@ton/core'
+import { CHAIN } from '@tonconnect/ui'
 
 export default {
   inject: ['wallet'],
@@ -103,109 +114,103 @@ export default {
     }
   },
   async created() {
-    this.loading.push("proposalsList");
-    const result = await fetchProposalsList(this.daoAddress.toString());
-    this.proposals = result.proposals;
-    this.loading.pop();
+    this.loading.push('proposalsList')
+    const result = await fetchProposalsList(this.daoAddress.toString())
+    this.proposals = result.proposals
+    this.loading.pop()
 
     if (this.wallet?.state.address) {
-      this.loading.push("wallet");
+      this.loading.push('wallet')
 
-      this.myAddress = Address.parse(this.wallet.state.address.toString());
+      this.myAddress = Address.parse(this.wallet.state.address.toString())
 
       const [walletInfo, daoItem] = await Promise.all([
         fetchWalletInfo(this.daoAddress.toRawString(), this.myAddress.toRawString()),
         fetchDaoItem(this.daoAddress.toRawString()),
-      ]);
+      ])
 
-      this.isParticipant = walletInfo.is_participant;
-      this.jettonWalletAddress = walletInfo.jetton_wallet ? Address.parse(walletInfo.jetton_wallet.address.raw) : null;
-      this.lockAddress = walletInfo.lock ? Address.parse(walletInfo.lock.address.raw) : null;
-      this.lockBalance = walletInfo.lock ? BigInt(walletInfo.lock.balance) : 0n;
-      this.jettonMaster = Address.parse(daoItem.jetton_master.raw);
-      this.jettonBalance = walletInfo.jetton_wallet ? BigInt(walletInfo.jetton_wallet.balance) : 0n;
+      this.isParticipant = walletInfo.is_participant
+      this.jettonWalletAddress = walletInfo.jetton_wallet
+        ? Address.parse(walletInfo.jetton_wallet.address.raw)
+        : null
+      this.lockAddress = walletInfo.lock ? Address.parse(walletInfo.lock.address.raw) : null
+      this.lockBalance = walletInfo.lock ? BigInt(walletInfo.lock.balance) : 0n
+      this.jettonMaster = Address.parse(daoItem.jetton_master.raw)
+      this.jettonBalance = walletInfo.jetton_wallet ? BigInt(walletInfo.jetton_wallet.balance) : 0n
 
-      this.loading.pop();
+      this.loading.pop()
     }
   },
   computed: {
     userFriendlyAddress() {
-      return cropTonAddress(this.daoAddress);
-    }
+      return cropTonAddress(this.daoAddress)
+    },
   },
   watch: {
     async 'wallet.state.connected'(newVal: boolean) {
       if (newVal) {
-        this.loading.push("wallet");
+        this.loading.push('wallet')
 
-        const myAddress = Address.parse(this.wallet?.state.address!.toString() || "");
-        this.myAddress = myAddress;
+        const myAddress = Address.parse(this.wallet?.state.address!.toString() || '')
+        this.myAddress = myAddress
 
-        console.log("Connected to wallet", myAddress.toString());
+        console.log('Connected to wallet', myAddress.toString())
 
         const [walletInfo, daoItem] = await Promise.all([
           fetchWalletInfo(this.daoAddress.toRawString(), myAddress.toRawString()),
           fetchDaoItem(this.daoAddress.toRawString()),
-        ]);
+        ])
 
-        this.isParticipant = walletInfo.is_participant;
-        this.jettonWalletAddress = walletInfo.jetton_wallet ? Address.parse(walletInfo.jetton_wallet.address.raw) : null;
-        this.lockAddress = walletInfo.lock ? Address.parse(walletInfo.lock.address.raw) : null;
-        this.lockBalance = walletInfo.lock ? BigInt(walletInfo.lock.balance) : 0n;
-        this.jettonMaster = Address.parse(daoItem.jetton_master.raw);
-        this.jettonBalance = walletInfo.jetton_wallet ? BigInt(walletInfo.jetton_wallet.balance) : 0n;
+        this.isParticipant = walletInfo.is_participant
+        this.jettonWalletAddress = walletInfo.jetton_wallet
+          ? Address.parse(walletInfo.jetton_wallet.address.raw)
+          : null
+        this.lockAddress = walletInfo.lock ? Address.parse(walletInfo.lock.address.raw) : null
+        this.lockBalance = walletInfo.lock ? BigInt(walletInfo.lock.balance) : 0n
+        this.jettonMaster = Address.parse(daoItem.jetton_master.raw)
+        this.jettonBalance = walletInfo.jetton_wallet
+          ? BigInt(walletInfo.jetton_wallet.balance)
+          : 0n
 
-        this.loading.pop();
+        this.loading.pop()
       }
-    }
+    },
   },
   methods: {
     nanoTonToTon,
     lockJetton() {
-      const payload = beginCell()
+      const proxyPayload = beginCell()
         .storeUint(0x0f8a7ea5, 32)
         .storeUint(0, 64)
-        .storeCoins(this.jettonBalance)
+        .storeCoins(toNano('1'))
         .storeAddress(this.lockAddress)
         .storeAddress(this.lockAddress)
         .storeMaybeRef(null)
         .storeCoins(toNano('0.1'))
         .storeMaybeRef(null)
-        .endCell();
+        .endCell()
 
-      const codeCell = Cell.fromBase64(lockContract.code);
-      const systemCell = Cell.fromBase64(lockContract.system);
-      const initData = beginCell()
-        .storeRef(systemCell)
-        .storeUint(0, 1)
+      const lockDeployPayload = beginCell()
+        .storeUint(0x690403, 32)
         .storeAddress(this.myAddress)
-        .storeAddress(this.jettonMaster!)
-        .endCell();
+        .endCell()
 
       this.wallet?.tonConnectUI.sendTransaction({
         validUntil: Math.floor(Date.now() / 1000) + 360,
         network: CHAIN.TESTNET,
         messages: [
           {
-            address: this.lockAddress?.toString() || "",
+            address: this.daoAddress?.toString() || '',
             amount: toNano('0.1').toString(),
-            stateInit: beginCell()
-              .storeBit(false)
-              .storeBit(false)
-              .storeMaybeRef(codeCell)
-              .storeMaybeRef(initData)
-              .storeUint(0, 1)
-              .endCell()
-              .toBoc()
-              .toString('base64'),
+            payload: lockDeployPayload.toBoc().toString('base64'),
           },
           {
-            address: this.jettonWalletAddress?.toString() || "",
+            address: this.jettonWalletAddress?.toString() || '',
             amount: toNano('0.2').toString(),
-            payload: payload.toBoc().toString('base64'),
+            payload: proxyPayload.toBoc().toString('base64'),
           },
         ],
-      });
+      })
     },
     jettonFaucet() {
       const payload = beginCell()
@@ -220,13 +225,13 @@ export default {
         network: CHAIN.TESTNET,
         messages: [
           {
-            address: this.jettonMaster?.toString() || "",
+            address: this.jettonMaster?.toString() || '',
             amount: toNano('0.2').toString(),
             payload: payload.toBoc().toString('base64'),
           },
         ],
-      });
-    }
+      })
+    },
   },
 }
 </script>

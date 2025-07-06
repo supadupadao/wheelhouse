@@ -32,7 +32,7 @@ async def main(context: Context):
     logger.info("Connecting to Database")
     await context.db.connect()
     logger.info("Running migrations")
-    await run_migrations(context.db, path="../migrations")
+    await run_migrations(context.db, path="./migrations")
 
     trackers = [
         MinterTracker(ctx),
